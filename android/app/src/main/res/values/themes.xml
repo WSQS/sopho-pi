@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 唯一一套调色板取自 web/index.html 的 :root（不让安卓屏另造一套外观）。
+         Compose 里的颜色常量在 ui/Theme.kt 里逐值抄自同一处，改这里请同时改那里。 -->
+    <style name="Theme.SophoProto" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0f1013</item>
+        <item name="android:statusBarColor">#0f1013</item>
+        <item name="android:navigationBarColor">#0f1013</item>
+        <item name="android:textColorPrimary">#c7c9cf</item>
+    </style>
+</resources>

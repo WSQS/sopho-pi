@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  明文的边界（原型口径，见 items/android-client/item.md「限制」）：
+  这里**没有**全局 usesCleartextTraffic；下面 base-config 允许明文，因为 A/B 今天只有明文 HTTP，
+  而服务器地址是业主自己填的私网地址（Android 的 domain-config 只能逐条列域名/IP，列不全任意私网）。
+  所以**真正的收窄在应用层**：ConnectionConfig.checkDestination() 只接受回环 / 私网 / 模拟器别名，
+  对公网地址直接拒绝并说明原因。https 路径未验（libzt 的 SocketProxy 之上没有 TLS 证据），
+  原型不装作能连 https。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

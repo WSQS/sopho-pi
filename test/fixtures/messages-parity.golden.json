@@ -1,0 +1,816 @@
+{
+  "branchSummaries": [
+    {
+      "atIndex": 9,
+      "details": {
+        "modifiedFiles": [
+          "b.ts"
+        ],
+        "readFiles": [
+          "a.ts"
+        ]
+      },
+      "entryId": "f0000001",
+      "fromId": "b0000002",
+      "note": "切分支时给被抛下的那条路生成的摘要（不是正文消息）",
+      "parentId": "d0000001",
+      "summary": "PARITY-BRANCH-SUMMARY-1",
+      "timestamp": "2026-09-01T00:00:14.000Z",
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 41,
+        "note": null,
+        "output": 42,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 41,
+          "output": 42,
+          "totalTokens": 83
+        },
+        "status": "known"
+      }
+    },
+    {
+      "atIndex": 9,
+      "details": null,
+      "entryId": "f0000002",
+      "fromId": "b0000004",
+      "note": "切分支时给被抛下的那条路生成的摘要（不是正文消息）",
+      "parentId": "f0000001",
+      "summary": "PARITY-BRANCH-SUMMARY-2",
+      "timestamp": "2026-09-01T00:00:15.000Z",
+      "usage": {
+        "cacheRead": null,
+        "cacheWrite": null,
+        "input": null,
+        "note": "This pi entry has no non-zero provider usage; usage is unknown, not zero.",
+        "output": null,
+        "raw": null,
+        "status": "unknown"
+      }
+    }
+  ],
+  "compaction": {
+    "atIndex": 9,
+    "details": {
+      "modifiedFiles": [
+        "d.ts"
+      ],
+      "readFiles": [
+        "a.ts"
+      ]
+    },
+    "entryId": "d0000001",
+    "firstKeptEntryId": "b0000003",
+    "note": "正文列表 ≠ 模型现在看得见的东西",
+    "summary": "PARITY-COMPACTION-SUMMARY",
+    "timestamp": "2026-09-01T00:00:11.000Z",
+    "tokensBefore": 1234,
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 71,
+      "note": null,
+      "output": 72,
+      "raw": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 0,
+          "output": 0,
+          "total": 0
+        },
+        "input": 71,
+        "output": 72,
+        "totalTokens": 143
+      },
+      "status": "known"
+    }
+  },
+  "compactionCount": 1,
+  "cwdMissing": null,
+  "extras": [
+    {
+      "content": [
+        {
+          "text": "PARITY-EXTRA-1",
+          "type": "text"
+        }
+      ],
+      "customType": "parity.note",
+      "details": {
+        "tag": "parity"
+      },
+      "display": true,
+      "entryId": "c0000001",
+      "parentId": "b0000007",
+      "text": "PARITY-EXTRA-1",
+      "timestamp": "2026-09-01T00:00:10.000Z"
+    }
+  ],
+  "messages": [
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-USER-1",
+          "type": "text"
+        }
+      ],
+      "entryId": "b0000001",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "parentId": "a0000003",
+      "role": "user",
+      "stopReason": null,
+      "text": "PARITY-USER-1",
+      "timestamp": "2026-09-01T00:00:03.000Z",
+      "toolCallId": null,
+      "toolName": null
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "thinking": "PARITY-THINKING-1",
+          "type": "thinking"
+        },
+        {
+          "text": "PARITY-TEXT-1",
+          "type": "text"
+        },
+        {
+          "arguments": {
+            "a": 1,
+            "b": "二"
+          },
+          "id": "call_parity_1",
+          "name": "parity_tool",
+          "type": "toolCall"
+        }
+      ],
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "estimated",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. Model metadata was unavailable; using pi's recorded cost fields as an assumption.",
+      "entryId": "b0000002",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "model": {
+        "display": "parity/parity-model",
+        "id": "parity-model",
+        "provider": "parity",
+        "requestedId": "parity-model",
+        "responseId": null,
+        "routed": false
+      },
+      "parentId": "b0000001",
+      "parts": [
+        {
+          "text": "PARITY-THINKING-1",
+          "type": "thinking"
+        },
+        {
+          "text": "PARITY-TEXT-1",
+          "type": "text"
+        },
+        {
+          "args": {
+            "a": 1,
+            "b": "二"
+          },
+          "details": {
+            "bytes": 11,
+            "note": null,
+            "preview": null,
+            "status": "known",
+            "truncated": false,
+            "value": {
+              "ok": true
+            }
+          },
+          "endedAt": "2026-09-01T00:00:05.000Z",
+          "isError": false,
+          "name": "parity_tool",
+          "result": "PARITY-RESULT-1",
+          "startedAt": "2026-09-01T00:00:04.000Z",
+          "status": "done-success",
+          "toolCallId": "call_parity_1",
+          "type": "tool"
+        }
+      ],
+      "role": "assistant",
+      "stopReason": "toolUse",
+      "text": "PARITY-TEXT-1",
+      "timestamp": "2026-09-01T00:00:04.000Z",
+      "toolCallId": null,
+      "toolName": null,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 11,
+        "note": null,
+        "output": 12,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 11,
+          "output": 12,
+          "totalTokens": 23
+        },
+        "status": "known"
+      }
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-RESULT-1",
+          "type": "text"
+        }
+      ],
+      "entryId": "b0000003",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "parentId": "b0000002",
+      "role": "toolResult",
+      "stopReason": null,
+      "text": "PARITY-RESULT-1",
+      "timestamp": "2026-09-01T00:00:05.000Z",
+      "toolCallId": "call_parity_1",
+      "toolName": "parity_tool"
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "thinking": "PARITY-THINKING-2",
+          "type": "thinking"
+        },
+        {
+          "arguments": {
+            "a": 2
+          },
+          "id": "call_parity_2",
+          "name": "parity_tool",
+          "type": "toolCall"
+        },
+        {
+          "text": "PARITY-TEXT-2",
+          "type": "text"
+        }
+      ],
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "estimated",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. Model metadata was unavailable; using pi's recorded cost fields as an assumption.",
+      "entryId": "b0000004",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "model": {
+        "display": "parity/parity-model",
+        "id": "parity-model",
+        "provider": "parity",
+        "requestedId": "parity-model",
+        "responseId": null,
+        "routed": false
+      },
+      "parentId": "b0000003",
+      "parts": [
+        {
+          "text": "PARITY-THINKING-2",
+          "type": "thinking"
+        },
+        {
+          "args": {
+            "a": 2
+          },
+          "details": {
+            "bytes": null,
+            "note": null,
+            "preview": null,
+            "status": "absent",
+            "truncated": false,
+            "value": null
+          },
+          "endedAt": "2026-09-01T00:00:07.000Z",
+          "isError": true,
+          "name": "parity_tool",
+          "result": "PARITY-RESULT-2",
+          "startedAt": "2026-09-01T00:00:06.000Z",
+          "status": "done-error",
+          "toolCallId": "call_parity_2",
+          "type": "tool"
+        },
+        {
+          "text": "PARITY-TEXT-2",
+          "type": "text"
+        }
+      ],
+      "role": "assistant",
+      "stopReason": "toolUse",
+      "text": "PARITY-TEXT-2",
+      "timestamp": "2026-09-01T00:00:06.000Z",
+      "toolCallId": null,
+      "toolName": null,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 21,
+        "note": null,
+        "output": 22,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 21,
+          "output": 22,
+          "totalTokens": 43
+        },
+        "status": "known"
+      }
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-RESULT-2",
+          "type": "text"
+        }
+      ],
+      "entryId": "b0000005",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": true,
+      "kind": "message",
+      "parentId": "b0000004",
+      "role": "toolResult",
+      "stopReason": null,
+      "text": "PARITY-RESULT-2",
+      "timestamp": "2026-09-01T00:00:07.000Z",
+      "toolCallId": "call_parity_2",
+      "toolName": "parity_tool"
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-USER-2",
+          "type": "text"
+        }
+      ],
+      "entryId": "b0000006",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "parentId": "b0000005",
+      "role": "user",
+      "stopReason": null,
+      "text": "PARITY-USER-2",
+      "timestamp": "2026-09-01T00:00:08.000Z",
+      "toolCallId": null,
+      "toolName": null
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-TEXT-3",
+          "type": "text"
+        }
+      ],
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "estimated",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. Model metadata was unavailable; using pi's recorded cost fields as an assumption.",
+      "entryId": "b0000007",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "model": {
+        "display": "parity/parity-model",
+        "id": "parity-model",
+        "provider": "parity",
+        "requestedId": "parity-model",
+        "responseId": null,
+        "routed": false
+      },
+      "parentId": "b0000006",
+      "parts": [
+        {
+          "text": "PARITY-TEXT-3",
+          "type": "text"
+        }
+      ],
+      "role": "assistant",
+      "stopReason": "stop",
+      "text": "PARITY-TEXT-3",
+      "timestamp": "2026-09-01T00:00:09.000Z",
+      "toolCallId": null,
+      "toolName": null,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 31,
+        "note": null,
+        "output": 32,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 31,
+          "output": 32,
+          "totalTokens": 63
+        },
+        "status": "known"
+      }
+    },
+    {
+      "aborted": false,
+      "bash": {
+        "cancelled": false,
+        "command": "git status --short",
+        "excludeFromContext": null,
+        "exitCode": 0,
+        "fullOutputPath": null,
+        "output": " M server/base-logic.mjs",
+        "truncated": false
+      },
+      "content": [],
+      "entryId": "e0000001",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "bashExecution",
+      "parentId": "c0000001",
+      "role": "bashExecution",
+      "stopReason": null,
+      "text": "$ git status --short\n M server/base-logic.mjs",
+      "timestamp": "2026-09-01T00:00:12.000Z",
+      "toolCallId": null,
+      "toolName": null
+    },
+    {
+      "aborted": false,
+      "bash": {
+        "cancelled": true,
+        "command": "bash -c \"yes | head -n 100000\"",
+        "excludeFromContext": null,
+        "exitCode": null,
+        "fullOutputPath": "PARITY-FULL-OUTPUT.txt",
+        "output": null,
+        "truncated": true
+      },
+      "content": [],
+      "entryId": "e0000002",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "bashExecution",
+      "parentId": "e0000001",
+      "role": "bashExecution",
+      "stopReason": null,
+      "text": "$ bash -c \"yes | head -n 100000\"\n(command cancelled)\n[Output truncated. Full output: PARITY-FULL-OUTPUT.txt]",
+      "timestamp": "2026-09-01T00:00:13.000Z",
+      "toolCallId": null,
+      "toolName": null
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-TEXT-4",
+          "type": "text"
+        },
+        {
+          "arguments": {
+            "path": "b.ts"
+          },
+          "id": "call_parity_big",
+          "name": "edit",
+          "type": "toolCall"
+        }
+      ],
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "estimated",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. Model metadata was unavailable; using pi's recorded cost fields as an assumption.",
+      "entryId": "b0000008",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "model": {
+        "display": "parity/parity-model",
+        "id": "parity-model",
+        "provider": "parity",
+        "requestedId": "parity-model",
+        "responseId": null,
+        "routed": false
+      },
+      "parentId": "f0000002",
+      "parts": [
+        {
+          "text": "PARITY-TEXT-4",
+          "type": "text"
+        },
+        {
+          "args": {
+            "path": "b.ts"
+          },
+          "details": {
+            "bytes": 70028,
+            "note": "details 有 70028 字节，超过上限 65536：正文被省略（截成半截 JSON 没法用），下面是前 2000 字符的原文预览",
+            "preview": "{\"diff\":\"PARITY-BIG-DIFF\\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "status": "oversized",
+            "truncated": true,
+            "value": null
+          },
+          "endedAt": "2026-09-01T00:00:17.000Z",
+          "isError": false,
+          "name": "edit",
+          "result": "PARITY-BIG-RESULT",
+          "startedAt": "2026-09-01T00:00:16.000Z",
+          "status": "done-success",
+          "toolCallId": "call_parity_big",
+          "type": "tool"
+        }
+      ],
+      "role": "assistant",
+      "stopReason": "toolUse",
+      "text": "PARITY-TEXT-4",
+      "timestamp": "2026-09-01T00:00:16.000Z",
+      "toolCallId": null,
+      "toolName": null,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 51,
+        "note": null,
+        "output": 52,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 51,
+          "output": 52,
+          "totalTokens": 103
+        },
+        "status": "known"
+      }
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-BIG-RESULT",
+          "type": "text"
+        }
+      ],
+      "entryId": "b0000009",
+      "errorMessage": null,
+      "extras": [],
+      "images": [],
+      "isError": false,
+      "kind": "message",
+      "parentId": "b0000008",
+      "role": "toolResult",
+      "stopReason": null,
+      "text": "PARITY-BIG-RESULT",
+      "timestamp": "2026-09-01T00:00:17.000Z",
+      "toolCallId": "call_parity_big",
+      "toolName": "edit"
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "data": "UEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLQ==",
+          "mimeType": "image/png",
+          "type": "image"
+        }
+      ],
+      "entryId": "b000000a",
+      "errorMessage": null,
+      "extras": [],
+      "images": [
+        {
+          "bytes": 1216,
+          "mimeType": "image/png"
+        }
+      ],
+      "isError": false,
+      "kind": "message",
+      "parentId": "b0000009",
+      "role": "user",
+      "stopReason": null,
+      "text": "[图片：image/png，1216 字节（网页暂不显示图片内容）]",
+      "timestamp": "2026-09-01T00:00:18.000Z",
+      "toolCallId": null,
+      "toolName": null
+    },
+    {
+      "aborted": false,
+      "content": [
+        {
+          "text": "PARITY-TEXT-5",
+          "type": "text"
+        },
+        {
+          "data": "UEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLVBBUklUWS1JTUFHRS1CWVRFUy1QQVJJVFktSU1BR0UtQllURVMtUEFSSVRZLUlNQUdFLUJZVEVTLQ==",
+          "mimeType": "image/jpeg",
+          "type": "image"
+        }
+      ],
+      "entryId": "b000000b",
+      "errorMessage": null,
+      "extras": [],
+      "images": [
+        {
+          "bytes": 1216,
+          "mimeType": "image/jpeg"
+        }
+      ],
+      "isError": false,
+      "kind": "message",
+      "parentId": "b000000a",
+      "role": "user",
+      "stopReason": null,
+      "text": "PARITY-TEXT-5\n[图片：image/jpeg，1216 字节（网页暂不显示图片内容）]",
+      "timestamp": "2026-09-01T00:00:19.000Z",
+      "toolCallId": null,
+      "toolName": null
+    }
+  ],
+  "observability": {
+    "cumulative": {
+      "auxiliary": {
+        "known": 2,
+        "unknown": 1
+      },
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "partial",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. At least one operation uses assumed/router pricing.",
+      "models": [
+        {
+          "display": "parity/parity-model",
+          "id": "parity-model",
+          "provider": "parity",
+          "requestedId": "parity-model",
+          "responseId": null,
+          "routed": false
+        }
+      ],
+      "rounds": {
+        "known": 4,
+        "unknown": 0
+      },
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 226,
+        "note": "1 auxiliary operation(s) have unknown usage and are not counted as zero.",
+        "output": 232,
+        "status": "partial"
+      }
+    },
+    "lastTurn": {
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0,
+        "status": "estimated",
+        "total": 0
+      },
+      "costBasis": "assumed",
+      "costEstimated": true,
+      "costNote": "Estimate only, not a bill. Model metadata was unavailable; using pi's recorded cost fields as an assumption.",
+      "model": {
+        "display": "parity/parity-model",
+        "id": "parity-model",
+        "provider": "parity",
+        "requestedId": "parity-model",
+        "responseId": null,
+        "routed": false
+      },
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 51,
+        "note": null,
+        "output": 52,
+        "raw": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0,
+            "total": 0
+          },
+          "input": 51,
+          "output": 52,
+          "totalTokens": 103
+        },
+        "status": "known"
+      }
+    }
+  },
+  "readOnly": false,
+  "readOnlyReason": null,
+  "sessionId": "11111111-1111-4111-8111-111111111111"
+}

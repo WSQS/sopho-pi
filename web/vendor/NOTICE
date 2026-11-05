@@ -1,0 +1,51 @@
+# web/vendor —— 第三方浏览器资源（只服务 `web/`，B 的静态处理器直接读盘）
+
+这三份文件都不是本仓写的，是从 pi 包里 **vendored 的浏览器 UMD bundle** 原样拷贝（外加一份我们
+自己筛过的 highlight.js 主题 CSS）。拷进来的原因见 `docs/handoff.md` 与
+`test/pi-html-render-adversarial.mjs`：正式消息的 markdown 渲染要一个真正的解析器 + 语法高亮器。
+
+## 来源与版本（逐个核对首行/包版本）
+
+| 文件 | 版本 | 来源 | 许可 |
+|---|---|---|---|
+| `marked.min.js` | **marked v18.0.5** | `node_modules/@earendil-works/pi-coding-agent/dist/core/export-html/vendor/marked.min.js`（pi 打包的浏览器 bundle，UMD ⇒ `window.marked`） | **MIT** |
+| `highlight.min.js` | **Highlight.js v11.9.0**（git f47103d4f1） | 同上目录的 `highlight.min.js`（UMD ⇒ `window.hljs`） | **BSD-3-Clause** |
+| `highlight-theme.css` | 本仓自写 | 筛选 highlight.js 会产生的 token 类，颜色取自 pi `dark.json` 的 `syntax*` | 本仓 |
+
+原始 sha256（拷入时逐字一致，可用 `sha256sum -c` 复验）：
+
+```text
+d5487edc7258b404bfa74c393d74a6393155f02517bd5e7e77cd64f8187f39a0  marked.min.js
+837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846  highlight.min.js
+```
+
+## 为什么不从 `node_modules` 里引用
+
+pi 的 `package.json` `exports` 图**不暴露** `dist/core/export-html/vendor/*` 子路径
+（只认 `.` / `./rpc-entry` / `./client` / `./experimental/plugin`），浏览器要从 `node_modules`
+伺服就得改宿主 B 的静态路由（要人在终端重启）。**pin 一份到 `web/` 是唯一零服务端改动的路**。
+后果：pi 升级时这两份**不会**跟着动 —— 这是有意的，版本以本文件记录的实际 bundle 为准，不照抄
+pi `package.json` 里声明的依赖版本（那两条**对不上**：声明 highlight.js 10.7.3，实际 bundle 是 11.9.0）。
+
+## `highlight-theme.css` 为什么不是整份主题
+
+highlight.js 的 `highlight.min.js` bundle 里**没有 CSS**。上游主题（如 `styles/atom-one-dark.css`）
+约 **1.3–1.4 KB**，其中大半是 hljs v9/v10 的旧类名与本仓从不生成的类（`hljs-code`、`hljs-gutter`、
+`hljs-ln-*` 之类）。这里只留下 hljs v11 的复合类（`.hljs-title.function_` / `.hljs-title.class_`）
+与常规 token 类，约 1 KB；换高亮主题只需改这一份文件。
+
+## 许可原文
+
+- marked：`Copyright (c) 2018-2026, MarkedJS. (MIT License)` / `Copyright (c) 2011-2018, Christopher Jeffrey. (MIT License)`
+- highlight.js：`(c) 2006-2023 undefined and other contributors` / `License: BSD-3-Clause`（两段都抄自各自 bundle 首行长注释）
+
+## 许可证全文（本目录随仓库分发这两份第三方 bundle，必须带全文）
+
+| 文件 | 许可证 | 全文 |
+|---|---|---|
+| `marked.min.js` | MIT | [`LICENSE-marked.txt`](LICENSE-marked.txt) |
+| `highlight.min.js` | BSD-3-Clause | [`LICENSE-highlight.js.txt`](LICENSE-highlight.js.txt) |
+
+⚠️ 一处如实记录：`highlight.min.js` 头部那行版权是 `(c) 2006-2023 undefined and other contributors`
+（上游打包模板里的占位变量没解析出来，字面就是 `undefined`）。许可证全文按上游仓库的规范版权人写：
+`Copyright (c) 2006, Ivan Sagalaev`。两处不一致来自上游 bundle，不是本仓改的。

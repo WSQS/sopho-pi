@@ -1,0 +1,388 @@
+/* web/designer.css —— 设计器（画布与编辑 UI，B 半）的样式。
+ *
+ * 只在 `/designer.html` 上生效；**不改** `web/slot.css` / `web/index.html` / `server/**`。
+ * 用色沿用全站那套 `--slot-*`（`web/slot.css` 提供）＋ 本页自己的几个中性色。
+ */
+:root {
+  color-scheme: dark;
+  --dz-bg: #0f1013;
+  --dz-panel: #121318;
+  --dz-raised: #17181d;
+  --dz-line: #292b31;
+  --dz-line-soft: #212329;
+  --dz-muted: #7c7f8a;
+  --dz-text: #c7c9cf;
+  --dz-bright: #e3e8e4;
+  --dz-accent: #8abeb7;
+  --dz-danger: #e06868;
+  --dz-warn: #d8a657;
+  --dz-canvas: #0b0c0f;
+  /* 画布里的**中立墨色**：它是编辑器给画布的环境，**不是**产品的调色板 */
+  --dz-ink-neutral: #e6e8ec;
+  /* ── 流程视图的**层序**（三档，越小越下）────────────────────────────────────────────────
+     屏卡 < 连线（含箭头） < 标签。**标签最上**：它最小、最容易被别的东西遮住。
+     为什么要写死这三个数：卡（`.dz-card`）的底是**不透明**的，而卡与连线都是定位元素
+     ⇒ 谁在上面由 `z-index` 定，**不是** DOM 顺序。改前两条都没写 `z-index`（都是 auto），
+     于是后出现的 `.dz-flow-cards` 整层铺在那一张 SVG 上 ⇒ 连线在卡内那一段被卡的底盖掉
+     （业主 2026-09-28 报的「箭头的层级在窗口的后面」）。
+     ⚠️ 标签与连线在**同一张 SVG**里（SVG 元素不吃 `z-index`），所以 SVG 内部再靠**两组 ＋
+     挂载顺序**分一次层：`.dz-arrow-lines` 在前、`.dz-arrow-labels` 在后（见 designer.js 的 paintArrows）。 */
+  --dz-layer-cards: 1;
+  --dz-layer-arrows: 2;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--dz-bg);
+  color: var(--dz-text);
+  font: 13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "PingFang SC", "Microsoft YaHei", monospace;
+}
+button, input, select, textarea { font: inherit; }
+button, input, select, textarea {
+  border: 1px solid var(--dz-line);
+  border-radius: 2px;
+  background: var(--dz-panel);
+  color: var(--dz-text);
+}
+button { cursor: pointer; }
+button:hover:not(:disabled) { color: var(--dz-bright); border-color: #4a4d56; }
+button:disabled { cursor: default; opacity: .45; }
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 1px solid #555862; outline-offset: -1px; }
+[hidden] { display: none !important; }
+code { color: var(--dz-text); }
+
+.dz-page { height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+
+/* ── 顶栏 ─────────────────────────────────────────────────────────────────────── */
+.dz-topbar {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: nowrap;
+  padding: .35rem .5rem; border-bottom: 1px solid var(--dz-line); background: var(--dz-panel);
+}
+.dz-title { margin: 0; font-size: 13px; color: var(--dz-bright); white-space: nowrap; }
+.dz-title-dim { margin-left: .4rem; font-size: 11px; color: var(--dz-muted); }
+.dz-toolbar { display: flex; align-items: center; gap: .3rem; }
+.dz-btn {
+  padding: .18rem .5rem; font-size: 12px; white-space: nowrap;
+}
+.dz-btn-sm { padding: .1rem .4rem; font-size: 11px; }
+.dz-btn[aria-pressed="true"] { border-color: var(--dz-accent); color: var(--dz-bright); }
+.dz-file { padding: .18rem .5rem; font-size: 12px; display: inline-flex; align-items: center; cursor: pointer; }
+.dz-status {
+  flex: 1 1 auto; margin: 0 0 0 .4rem; padding-left: .6rem; border-left: 1px solid var(--dz-line);
+  font-size: 11px; color: var(--dz-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dz-status[data-kind="error"] { color: var(--dz-danger); }
+.dz-status[data-kind="ok"] { color: var(--dz-accent); }
+
+/* ── 顶栏「导出 ▾」菜单（绝对定位：开着的时候不挤动顶栏那一排）────────────────────────── */
+.dz-menu { position: relative; display: inline-flex; }
+.dz-menu-items {
+  position: absolute; top: calc(100% + 2px); left: 0; z-index: 40; min-width: 15rem;
+  display: flex; flex-direction: column; gap: 1px; padding: .2rem;
+  background: var(--dz-panel); border: 1px solid var(--dz-line);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+}
+.dz-menu-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .05rem;
+  padding: .22rem .4rem; font-size: 12px; text-align: left;
+  border-color: transparent; background: transparent; color: var(--dz-text);
+}
+.dz-menu-item:hover:not(:disabled) { border-color: #3c3f47; color: var(--dz-bright); }
+.dz-menu-note { font-size: 10px; color: var(--dz-muted); }
+.dz-menu-item[data-busy="true"] { cursor: progress; opacity: .6; }
+
+/* ── 三栏 ─────────────────────────────────────────────────────────────────────── */
+.dz-body {
+  min-height: 0; display: grid;
+  grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr) minmax(18rem, 21rem);
+}
+.dz-left, .dz-right {
+  min-height: 0; display: flex; flex-direction: column; gap: .1rem;
+  background: #101115; overflow: auto;
+}
+.dz-left { border-right: 1px solid var(--dz-line); }
+.dz-right { border-left: 1px solid var(--dz-line); }
+.dz-right { flex-direction: column-reverse; justify-content: flex-end; }
+.dz-block { padding: .4rem .5rem; border-bottom: 1px solid var(--dz-line-soft); display: flex; flex-direction: column; gap: .3rem; }
+.dz-block-top { border-top: 1px solid var(--dz-line-soft); }
+.dz-grow { flex: 1 1 auto; min-height: 0; }
+.dz-h2 { margin: 0; font-size: 11px; font-weight: 600; color: var(--dz-bright); letter-spacing: .02em; }
+.dz-count { margin-left: .35rem; font-weight: 400; color: var(--dz-muted); }
+.dz-hint, .dz-note { margin: 0; font-size: 11px; color: var(--dz-muted); line-height: 1.5; }
+
+.dz-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .25rem; }
+.dz-tool { padding: .32rem .2rem; font-size: 11px; }
+.dz-tool[data-armed="true"] { border-color: var(--dz-accent); color: var(--dz-bright); }
+
+.dz-list { display: flex; flex-direction: column; gap: 1px; min-height: 1.4rem; }
+.dz-row {
+  display: flex; align-items: center; gap: .3rem; padding: .12rem .25rem;
+  border: 1px solid transparent;
+  background: var(--dz-raised); color: var(--dz-text); font-size: 11px; cursor: pointer; text-align: left;
+}
+/* ⚠️ 左边那条槽**不在这里画**：它由全站那条共享原语给（`web/slot.css` 的
+   `button, input, … { border-inline-start: … solid var(--slot, var(--slot-idle)) !important }`），
+   颜色只取 `--slot-*`。这里原来还有一句 `border-left: 3px solid var(--dz-slots)` ——
+   **它从来没画出来过**（`.dz-row` 是 `button`，被上面那条 `!important` 压着；真 Chromium 实测
+   所有 `.dz-row` 的 `border-inline-start-color` 都是 `--slot-idle` 的 `rgb(77,80,88)`，不是
+   `#292b31`），而且它把「槽色只由 `--slot-*` 表达」这条口径撕开一个口子（另开一个调色板 token
+   `--dz-slots`，值与 `--dz-line` 重复）。所以那一句与 `:root` 里的 `--dz-slots` 一起删掉：
+   视觉一个像素不变（同一实测色），源码不再撒谎。反证臂 `dz-row-dead-slot-token`
+   （`test/designer-ui.mjs`）就是把那句加回来 ⇒ 必红。 */
+.dz-row[aria-selected="true"] { border-color: var(--dz-accent); border-left-color: var(--dz-accent); color: var(--dz-bright); }
+.dz-row:hover { border-color: #3c3f47; }
+.dz-row-id { color: var(--dz-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-row-main { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-row-tag { flex: none; color: var(--dz-muted); font-size: 10px; }
+.dz-layers { overflow: auto; }
+/* ── 图层行：缩进是**留白**（与会话树同形）＋ 可折叠的子项（业主 2026-09-27 更正）───────────────────
+   业主 2026-09-27 逐字：「你的缩进是有了但是**缩进之后，左侧应该是空白的，和我们的会话树一样**，而不是
+   **还存在槽位**」—— 缩进区不许再按层画槽，要与 `web/render.js` 的会话树**同形**。
+   会话树的实测口径：缩进 = 行自己的 `margin-inline-start = min(depth,6) × .65rem`（由 JS 写到行上，见
+   `layerRow()` 的 `[SEAM:layer-indent]`）；缩进那一段**没有元素、没有伪元素**（`::before`/`::after` 的
+   `content` 是 `none`）。每一行只有**它自己**那一条 3px 槽（`border-inline-start`），随行一起挪到该层左缘。
+   这一族是 `div`（不是 `button`）：行里要放一个**真的**折叠按钮，而 `button` 里不许再套 `button`
+   （HTML 内容模型禁交互内容后代）⇒ 键盘可达性由 `tabindex="0"` ＋ Enter/Space 自己接（见 `layerRow()`）。 */
+.dz-layers .dz-layer {
+  --slot: var(--slot-idle);
+  /* [SEAM:layer-slot] —— 行**自身**那条 3px 槽的颜色来源；反证臂 `slot-hardcoded` 改的就是这一行。
+     `div` 不在 `web/slot.css` 那条 `button, input, …` 的名单里，所以这里显式写一遍（表达式与 slot.css
+     那条原语同一形状，只少了 `!important` —— 这一族是 div，没有别人来抢这一格）。 */
+  border-inline-start: var(--design-slot-width, 3px) solid var(--slot);
+}
+/* 折叠控件自己不吃槽：`slot.css` 那条 `!important` 的槽是给「有视觉边界的元素」的，而这一格只是行内的一个窄控件
+   —— 它若也吃一条 3px，缩进就会多出一段**假的**层级（实测：不加这条压制时它是 `3px solid rgb(77, 80, 88)`）。
+   · 两条路现在都走得通（所以这里保持纪律：**两条都留**）：
+     ① 它自带的那个逐元素撤销开关 `[data-slot="off"]` 现在能赢了 —— 2026-09-27 把 `web/slot.css` 那条开关
+        换成了 `@layer slot-off`（分层 `!important` 压过未分层的 `!important`，与特异性无关）；断它的是
+        `test/designer-ui.mjs` 的 `slot:off-switch`（反证臂 `slot-off-layer-dropped`）。
+     ② 下面这条 id 作用域的规则（`#dz-layers .dz-layer > .dz-fold`，1,2,0）照旧压得住那条按钮槽（0,7,1）。
+        留着它是因为它把「这一格不吃槽」钉在**本页自己**的样式里（不依赖 `slot.css` 的层序），而且它只落在
+        这一格上（不碰别的 `button`）。改动前 ① 是不成立的（那时 `[data-slot="off"]` 是 0,1,0，
+        被 0,7,1 压着），当时真正生效的只有这条 ②。 */
+#dz-layers .dz-layer > .dz-fold {
+  border-inline-start-width: 0 !important;
+  border-inline-start-style: none !important;
+  border-inline-start-color: transparent !important;
+}
+.dz-fold {
+  flex: none; width: 1.2em; padding: 0; line-height: 1.2; font-size: 10px; white-space: nowrap;
+  border-color: transparent; background: transparent; color: var(--dz-muted);
+}
+.dz-fold:hover:not(:disabled) { color: var(--dz-bright); }
+.dz-fold-empty { display: inline-block; }
+.dz-inline { display: flex; gap: .3rem; flex-wrap: wrap; }
+
+/* ── 画布 ─────────────────────────────────────────────────────────────────────── */
+.dz-center { min-width: 0; min-height: 0; position: relative; background: var(--dz-canvas); overflow: hidden; }
+.dz-canvas { position: absolute; inset: 0; overflow: auto; padding: 1rem; }
+.dz-frame {
+  position: relative;
+  background: #15171b;
+  box-shadow: 0 0 0 1px var(--dz-line);
+  margin: 0 auto;
+}
+/* 画布的**中立基线**：14px ／ 系统字体栈 ／ 中性墨色。
+   它是「编辑器给画布的环境」，所以元素的数据里一个像素都没有（`button`/`input` 靠本页的 `font: inherit` 吃到它）。 */
+.dz-frame, .dz-card-scale {
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--dz-ink-neutral);
+}
+.dz-frame[data-drop="active"] { box-shadow: 0 0 0 1px var(--dz-accent); }
+
+/* ⚠️ 渲染出来的元素是**中立的**：只有语义与几何，**没有**我们产品/本页的皮肤。
+   （业主 2026-09-27 逐字：「默认创建出来的元素就是左侧有 3px 的槽的，这个不太对，这个应该是通过编辑器
+   编辑出来的，而不是默认如此」。）所以这里只留结构性的东西：
+   · 背景一律透明（尤其 `button`：UA 自带 `buttonface` 底色，不显式清掉就不是中立的）；
+   · 边框 / 圆角 / 内边距一律清掉（本页基础样式给裸 `button`/`input` 那套面板皮肤也在这层清）；
+   · 颜色 / 字体一律继承（由 `.dz-frame`／`.dz-card-scale` 的**中立基线**给：14px ＋ 系统字体栈）；
+   · 那一侧的「槽」不是被删掉了 —— 它现在**能在属性面板里做出来**（单边边框 ＋ 颜色）。 */
+.dz-el-container { min-width: 0; min-height: 0; }
+.dz-el { box-sizing: border-box; }
+/* 「空容器」的虚线框是**编辑器自己的提示**（跟选中框同一类：不进元素的 style、不进几何），不是元素的皮肤 */
+.dz-el-container[data-empty="true"] { outline: 1px dashed #3a3d45; outline-offset: -1px; }
+.dz-el-rect, .dz-el-text, .dz-el-image, .dz-el-input, .dz-el-button, .dz-el-container { background: transparent; }
+.dz-el-text { white-space: pre-wrap; overflow-wrap: break-word; }
+.dz-el-image { display: block; object-fit: cover; }
+/* 分割符：一个**真元素**（`<hr>`）—— 外观全在行内样式里（长短边由方向/粗细推出来，见 designer.js） */
+.dz-el-divider { margin: 0; padding: 0; border-style: solid; }
+.dz-el-input, .dz-el-button {
+  border: 0; border-radius: 0; padding: 0; background: transparent; color: inherit;
+}
+.dz-el-button { display: inline-flex; align-items: center; justify-content: center; }
+
+/* 那条产品级的槽（`slot.css` 用 `border-inline-start: 3px … !important` 画在**裸** `button`/`input` 上）
+   在画布 / 预览 / 流程卡里一律**不生效**：这是「新建元素不会被做成 sopho-pi 的一行」的一半。
+   · 为什么用 id 选择器：`slot.css` 那条按钮规则是 7 个 `:not()`（特异性 0,7,1），两边都是 `!important`
+     时按特异性判 ⇒ 只有 id（1,1,1）压得住它（`[data-slot="off"]` 是 0,1,0，**压不过它**）。
+   · 为什么只点 `button`/`input`：`slot.css` 的选择器里只有这两个标签能命中我们的元素（`div`/`img`/`hr`
+     不在里面）—— 竖分割符靠 `border-left` 画，**不能**被这条重置误伤。
+   · 另一半在 `applyStyle()`：元素**自己**写的左边框用行内 `!important` 写，于是「能做出来」也成立。 */
+#dz-frame button.dz-el, #dz-frame input.dz-el,
+#dz-preview-stage button.dz-el, #dz-preview-stage input.dz-el,
+#dz-flow-cards button.dz-el, #dz-flow-cards input.dz-el,
+#dz-export-stage button.dz-el, #dz-export-stage input.dz-el {
+  border-inline-start-width: 0 !important;
+  border-inline-start-style: none !important;
+  border-inline-start-color: transparent !important;
+}
+
+/* 量测舞台（导出的几何从它上面 `getBoundingClientRect()` 量出来）—— 屏幕外、不参与布局、不接鼠标：
+   `#dz-export-stage` 这个 id 只为上面那条槽压制与它同命（`slot.css` 那条按钮规则 0,7,1 只有 id 压得住）。 */
+#dz-export-stage { position: absolute; left: -20000px; top: 0; width: 0; height: 0; pointer-events: none; }
+
+/* 选中 / 多选：辅助标记，不进布局、不进任何几何断言 */
+.dz-el.dz-selected { outline: 2px solid var(--dz-accent); outline-offset: 0; }
+.dz-el.dz-multi { outline: 1px dashed var(--dz-accent); outline-offset: 0; }
+
+/* 覆盖层：选中框与缩放手柄（手柄只做一件事：改 size） */
+.dz-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.dz-handle {
+  position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+  border: 1px solid var(--dz-canvas); background: var(--dz-accent);
+  pointer-events: auto; cursor: nwse-resize; z-index: 6;
+}
+.dz-handle[data-role="resize-se"] { cursor: nwse-resize; }
+.dz-guide { position: absolute; background: #d98c5f; z-index: 4; pointer-events: none; }
+.dz-guide[data-axis="x"] { width: 1px; top: 0; bottom: 0; }
+.dz-guide[data-axis="y"] { height: 1px; left: 0; right: 0; }
+.dz-marquee {
+  position: absolute; border: 1px solid var(--dz-accent); background: rgba(138, 190, 183, .12);
+  pointer-events: none; z-index: 5;
+}
+/* 从工具栏拖出来的幽灵（落点提示） */
+.dz-ghost {
+  position: fixed; z-index: 60; pointer-events: none; padding: .15rem .4rem;
+  border: 1px solid var(--dz-accent); background: rgba(138, 190, 183, .18);
+  color: var(--dz-bright); font-size: 11px; border-radius: 2px;
+}
+
+/* ── 流程（箭头由 transitions 生成）──────────────────────────────────────────── */
+/* `scrollbar-gutter: stable` 是「缩放是**纯视图变换**」的前提：滚动条一出现/消失会改变内容宽
+   ⇒ flex 换行跟着变（那就不是纯视图变换了）。固定留出槽位 ⇒ 换行与缩放无关。 */
+.dz-flow { position: absolute; inset: 0; overflow: auto; padding: 1rem; scrollbar-gutter: stable; cursor: grab; }
+/* 拖动平移中（起点分流见 designer.js 的 `mousedown`）：只有**空白处**是这个光标 ——
+   卡片 / 卡头 / 箭头 / 标签 / 流程栏各自有自己的光标，这里不碰它们。 */
+.dz-flow[data-panning="true"] { cursor: grabbing; }
+/* 连线层（含箭头与标签）压在屏卡**之上**：`z-index` 见 `:root` 的 `--dz-layer-cards` / `--dz-layer-arrows` */
+.dz-arrows { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: var(--dz-layer-arrows); }
+/* SVG 内部的两层（SVG 元素不吃 z-index ⇒ 靠挂载顺序：连线在前、标签在后 —— 见 paintArrows）*/
+.dz-arrow-lines { pointer-events: none; }
+.dz-arrow-labels { pointer-events: none; }
+.dz-arrow-path { fill: none; stroke: var(--dz-accent); stroke-width: 1.5; }
+/* 标签：一个组（**不透明底 **`<rect>` ＋ 文字）—— `.dz-arrow-label` 上的 fill/font-size 由里面的
+   文字继承，所以「文字色/字号」仍然只有这一处声明。 */
+.dz-arrow-label { fill: var(--dz-text); font-size: 10px; pointer-events: auto; cursor: pointer; }
+.dz-arrow-label .dz-arrow-label-bg { fill: var(--dz-canvas); stroke: var(--dz-line); stroke-width: 1; fill-opacity: 1; }
+.dz-arrow-label .dz-arrow-label-text { fill: var(--dz-text); }
+/* 点箭头 ⇒ 打开转移表单：细线不好点，所以叠一条透明但很粗的同路径归中点 */
+.dz-arrow-hit { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
+/* 卡片容器铺满整片（含间距）⇒ 不关掉它的事件，间距里的箭头就永远点不到。
+   它在连线层**之下**（`--dz-layer-cards`，见上面那段层序）。 */
+/* 滚轮缩放：缩放变换**只**施加在卡片层（`transform: scale(...)`，见 designer.js 的 `viewTransform`）；
+   `transform-origin` 由脚本按「SVG 层原点」算（整块绕它等比缩放 ⇒ 缩放就是 z=1 那张图的等比放大）。
+   连线层（`.dz-arrows`）不加 CSS 变换：它的坐标本来就是**屏幕坐标**（端点按卡片实测矩形算）⇒
+   缩放后箭头自动跟着卡片走，且「画面上的点 = SVG 坐标」这条不变（命中测试 / 几何读数照旧）。 */
+.dz-flow-cards { position: relative; display: flex; flex-wrap: wrap; gap: 3.5rem 5rem; align-items: flex-start; pointer-events: none; z-index: var(--dz-layer-cards); transform-origin: 0 0; }
+.dz-card { border: 1px solid var(--dz-line); background: #121318; pointer-events: auto; }
+.dz-flow-bar { position: relative; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: 0 0 .6rem; }
+.dz-flow-add { padding: .3rem .8rem; font-size: 12px; border-color: var(--dz-accent); color: var(--dz-bright); }
+.dz-flow-hint, .dz-flow-empty { font-size: 11px; color: var(--dz-muted); }
+/* 缩放控件（滚轮缩放 ⇄ 键盘/触屏退路）：贴在流程栏右侧，不参与画布缩放 */
+.dz-flow-zoom { display: inline-flex; align-items: center; gap: .3rem; margin-left: auto; }
+.dz-flow-zoom-level { min-width: 3.2rem; text-align: right; font-size: 11px; color: var(--dz-muted); font-variant-numeric: tabular-nums; }
+.dz-flow-empty { position: relative; margin: .2rem 0 0; padding: .35rem .5rem; border: 1px dashed var(--dz-line); border-radius: 2px; }
+.dz-flow-empty[hidden] { display: none; }
+/* 兜底警告：指不到节点的转移（校验已拒收缺 state 的文档 ⇒ 这里量的是「万一」那条路）*/
+.dz-flow-warn { position: relative; margin: .2rem 0 0; padding: .35rem .5rem; border: 1px solid var(--dz-warn); border-radius: 2px; font-size: 11px; line-height: 1.5; color: var(--dz-warn); }
+.dz-card[data-current="true"] { border-color: var(--dz-accent); }
+.dz-card-head {
+  display: flex; align-items: center; gap: .35rem; padding: .15rem .35rem;
+  border-bottom: 1px solid var(--dz-line); font-size: 11px; color: var(--dz-bright); cursor: pointer;
+}
+.dz-card-head .dz-count { color: var(--dz-muted); }
+.dz-card-body { position: relative; overflow: hidden; }
+.dz-card-scale { transform-origin: top left; }
+.dz-flow-note { margin: 1rem 0 0; font-size: 11px; color: var(--dz-muted); }
+
+/* ── 属性面板 ─────────────────────────────────────────────────────────────────── */
+.dz-panel { display: flex; flex-direction: column; gap: .35rem; }
+.dz-field { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); align-items: center; gap: .3rem; font-size: 11px; }
+.dz-field > label { color: var(--dz-muted); }
+.dz-field-wide { grid-column: 1 / -1; }
+.dz-field input, .dz-field select { width: 100%; padding: .1rem .25rem; font-size: 11px; }
+.dz-field .dz-measure { grid-column: 2 / 3; color: var(--dz-muted); font-size: 10px; }
+.dz-group { border: 1px solid var(--dz-line-soft); border-radius: 2px; padding: .35rem; display: flex; flex-direction: column; gap: .28rem; }
+.dz-group > h3 { margin: 0; font-size: 10px; font-weight: 600; color: var(--dz-muted); text-transform: uppercase; letter-spacing: .06em; }
+.dz-axis { display: grid; grid-template-columns: 4.2rem 5.2rem minmax(0, 1fr) auto; align-items: center; gap: .25rem; }
+.dz-axis > span:first-child { color: var(--dz-muted); white-space: nowrap; }
+.dz-axis input, .dz-axis select { width: 100%; padding: .1rem .25rem; font-size: 11px; }
+.dz-axis .dz-measure { grid-column: 4; color: var(--dz-muted); font-size: 10px; white-space: nowrap; }
+.dz-align { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .2rem; }
+.dz-align button { padding: .2rem 0; font-size: 10px; }
+.dz-transitions { display: flex; flex-direction: column; gap: .25rem; }
+.dz-transition { border: 1px solid var(--dz-line-soft); border-radius: 2px; padding: .25rem; display: flex; flex-direction: column; gap: .2rem; }
+.dz-transition-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem; }
+.dz-transition select, .dz-transition input { width: 100%; padding: .1rem .25rem; font-size: 11px; }
+.dz-transition-foot { display: flex; align-items: center; gap: .3rem; }
+.dz-transition-foot .dz-row-main { font-size: 10px; color: var(--dz-muted); }
+
+/* ── 转移表单（「＋ 添加转移」与点箭头打开的是同一张）─────────────────────────────── */
+.dz-tform {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  background: rgba(6, 7, 9, .64); padding: 1rem;
+}
+.dz-tform-box {
+  width: min(32rem, 94vw); display: flex; flex-direction: column; gap: .45rem;
+  padding: .7rem .8rem; border: 1px solid var(--dz-line); border-radius: 3px;
+  background: var(--dz-panel); box-shadow: 0 10px 34px rgba(0, 0, 0, .55);
+}
+.dz-tform-box h2 { margin: 0; font-size: 13px; color: var(--dz-bright); }
+.dz-tform-lead { margin: 0; font-size: 11px; color: var(--dz-muted); line-height: 1.5; }
+.dz-tform-row { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr) minmax(0, 1fr); gap: .35rem; align-items: center; }
+.dz-tform-label { font-size: 11px; color: var(--dz-bright); }
+.dz-tform-row select, .dz-tform-row input { width: 100%; padding: .18rem .3rem; font-size: 12px; }
+.dz-tform-error { margin: 0; min-height: 1.3em; font-size: 11px; color: var(--dz-danger); }
+.dz-tform-actions { display: flex; align-items: center; gap: .4rem; justify-content: flex-end; }
+.dz-tform-actions .dz-btn { padding: .25rem .8rem; font-size: 12px; }
+.dz-tform-del { margin-right: auto; border-color: var(--dz-danger); color: var(--dz-danger); }
+.dz-tform-ok { border-color: var(--dz-accent); color: var(--dz-bright); }
+
+/* ── 复制 JSON 的手动框（三级降级的第 ③ 级）────────────────────────────────────────
+   只在「浏览器拿不到剪贴板 API」时出现：里面是只读 textarea ＋ 已全选的导出串，
+   文案说清为什么（安全上下文）与怎么办（Ctrl+C / 导出 JSON）—— 不是死胡同。 */
+.dz-copy {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+  background: rgba(6, 7, 9, .64); padding: 1rem;
+}
+.dz-copy-box {
+  width: min(44rem, 94vw); max-height: 86vh; display: flex; flex-direction: column; gap: .45rem;
+  padding: .7rem .8rem; border: 1px solid var(--dz-line); border-radius: 3px;
+  background: var(--dz-panel); box-shadow: 0 10px 34px rgba(0, 0, 0, .55);
+}
+.dz-copy-box h2 { margin: 0; font-size: 13px; color: var(--dz-bright); }
+.dz-copy-lead { margin: 0; font-size: 11px; color: var(--dz-text); line-height: 1.6; }
+.dz-copy-why { margin: 0; font-size: 11px; color: var(--dz-muted); line-height: 1.6; }
+.dz-copy-text {
+  flex: 1 1 auto; width: 100%; min-height: 12rem; resize: vertical;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #0d0e11; color: var(--dz-text); border: 1px solid var(--dz-line);
+  border-radius: 3px; padding: .4rem .5rem;
+}
+.dz-copy-actions { display: flex; justify-content: flex-end; gap: .4rem; }
+.dz-copy-actions .dz-btn { padding: .25rem .8rem; font-size: 12px; }
+
+/* ── 预览（同一份文档的静态渲染；零外部请求）──────────────────────────────────── */
+.dz-preview {
+  position: fixed; inset: 0; z-index: 40; display: grid; grid-template-rows: auto minmax(0, 1fr);
+  background: #0b0c0f;
+}
+.dz-preview-bar {
+  display: flex; align-items: center; gap: .6rem; padding: .35rem .6rem;
+  border-bottom: 1px solid var(--dz-line); background: var(--dz-panel); color: var(--dz-bright);
+}
+.dz-preview-summary { flex: 1 1 auto; color: var(--dz-muted); font-size: 11px; }
+.dz-preview-flag { color: var(--dz-accent); font-size: 11px; }
+.dz-preview-stage { overflow: auto; padding: 1.5rem; }
+.dz-preview-stage .dz-frame { margin: 0 auto; }

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "version": "0.1.0",
+  "name": "最小文档",
+  "tokens": {
+    "--fg": "#e6e6e6"
+  },
+  "screens": [],
+  "transitions": []
+}

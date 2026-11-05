@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  adaptive icon 的**背景层**：就是母版里那一整块深底 `#bg`（`#0f1013`），一个平涂色。
+
+  为什么不在这里放一层图形：A4 母版的深底本来就是「满版底色」，前景层只承载 `#fg` 那三块青绿几何
+  （槽／气泡／尾）。两侧分工与母版分层（`<rect id="bg">` + `<g id="fg">`）一一对应，
+  所以背景层用 ColorDrawable 就够，不需要第二份几何。
+
+  色值逐字取自母版 `web/brand/sopho-app-icon-a4.svg`（SHA-256 20eff8cf…），不改色。
+-->
+<resources>
+    <color name="ic_launcher_background">#0f1013</color>
+</resources>

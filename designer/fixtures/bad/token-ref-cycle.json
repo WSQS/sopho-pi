@@ -1,0 +1,55 @@
+{
+  "$schema": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "version": "0.1.0",
+  "name": "最小文档",
+  "tokens": {
+    "--a": "var(--b)",
+    "--b": "var(--a)",
+    "--fg": "#e6e6e6"
+  },
+  "screens": [
+    {
+      "id": "only",
+      "name": "唯一屏",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "only-root",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 200
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 120
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "only-box",
+            "type": "rect",
+            "box": {
+              "x": 8,
+              "y": 8,
+              "w": 40,
+              "h": 20
+            },
+            "style": {
+              "background": "var(--fg)"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": []
+}

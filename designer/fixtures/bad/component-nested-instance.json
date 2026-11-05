@@ -1,0 +1,259 @@
+{
+  "$schema": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "version": "0.1.0",
+  "name": "设计器示例：组件、变体与实例（＋单边边框）",
+  "tokens": {
+    "--bg": "#101216",
+    "--card": "#15171b",
+    "--fg": "#e6e6e6",
+    "--line": "#2a2d33",
+    "--slot-idle": "#4d5058",
+    "--slot-pending": "#7f9baf",
+    "--slot-success": "#7bc47f",
+    "--slot-error": "#e06868",
+    "--slot-warning": "#d8b45a"
+  },
+  "components": [
+    {
+      "id": "tool-card",
+      "name": "工具块（组件）",
+      "variants": [
+        {
+          "id": "running",
+          "name": "在跑",
+          "overrides": {
+            "tc-root": {
+              "style": {
+                "border": {
+                  "left": {
+                    "color": "var(--slot-pending)"
+                  }
+                }
+              }
+            },
+            "tc-meta": {
+              "style": {
+                "color": "var(--slot-pending)"
+              },
+              "text": "工具 · 在跑"
+            }
+          }
+        },
+        {
+          "id": "done-success",
+          "name": "完成",
+          "overrides": {
+            "tc-root": {
+              "style": {
+                "border": {
+                  "left": {
+                    "color": "var(--slot-success)"
+                  }
+                }
+              }
+            },
+            "tc-meta": {
+              "style": {
+                "color": "var(--slot-success)"
+              },
+              "text": "工具 · 完成"
+            }
+          }
+        },
+        {
+          "id": "done-error",
+          "name": "失败",
+          "overrides": {
+            "tc-root": {
+              "style": {
+                "border": {
+                  "left": {
+                    "color": "var(--slot-error)"
+                  }
+                }
+              }
+            },
+            "tc-meta": {
+              "style": {
+                "color": "var(--slot-error)"
+              },
+              "text": "工具 · 失败"
+            }
+          }
+        },
+        {
+          "id": "unfinished",
+          "name": "未完成（interrupted 同这一档）",
+          "overrides": {
+            "tc-root": {
+              "style": {
+                "border": {
+                  "left": {
+                    "color": "var(--slot-warning)"
+                  }
+                }
+              }
+            },
+            "tc-meta": {
+              "style": {
+                "color": "var(--slot-warning)"
+              },
+              "text": "工具 · 未完成（interrupted 同这一档）"
+            }
+          }
+        }
+      ],
+      "root": {
+        "id": "tc-root",
+        "type": "container",
+        "name": "工具块",
+        "size": {
+          "w": {
+            "mode": "fill"
+          },
+          "h": {
+            "mode": "content"
+          }
+        },
+        "layout": {
+          "mode": "column",
+          "gap": 4.8,
+          "padding": [
+            8.8,
+            10.4
+          ]
+        },
+        "style": {
+          "background": "var(--card)",
+          "borderRadius": 2,
+          "border": {
+            "width": 1,
+            "color": "var(--line)",
+            "left": {
+              "width": 3,
+              "color": "var(--slot-idle)"
+            }
+          }
+        },
+        "children": [
+          {
+            "id": "tc-meta",
+            "type": "text",
+            "name": "角标行",
+            "size": {
+              "w": {
+                "mode": "fill"
+              },
+              "h": {
+                "mode": "content"
+              }
+            },
+            "style": {
+              "color": "var(--slot-idle)",
+              "fontSize": 11
+            },
+            "text": "工具"
+          },
+          {
+            "id": "tc-line",
+            "type": "text",
+            "name": "正文",
+            "size": {
+              "w": {
+                "mode": "fill"
+              },
+              "h": {
+                "mode": "content"
+              }
+            },
+            "style": {
+              "color": "var(--fg)",
+              "fontSize": 12
+            },
+            "text": "（命令）"
+          },
+          {
+            "id": "tc-nested",
+            "type": "instance",
+            "ref": "tool-card",
+            "size": {
+              "w": {
+                "mode": "fill"
+              },
+              "h": {
+                "mode": "content"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "screens": [
+    {
+      "id": "main",
+      "name": "会话",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "main-root",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 300
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 200
+          }
+        },
+        "layout": {
+          "mode": "column",
+          "gap": 6,
+          "padding": 6
+        },
+        "children": [
+          {
+            "id": "inst-ok",
+            "type": "instance",
+            "ref": "tool-card",
+            "variant": "done-success",
+            "size": {
+              "w": {
+                "mode": "fill"
+              },
+              "h": {
+                "mode": "content"
+              }
+            },
+            "overrides": {
+              "tc-line": {
+                "text": "$ node designer/validate.mjs main-screen.json"
+              }
+            }
+          },
+          {
+            "id": "inst-run",
+            "type": "instance",
+            "ref": "tool-card",
+            "variant": "running",
+            "size": {
+              "w": {
+                "mode": "fill"
+              },
+              "h": {
+                "mode": "content"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": []
+}

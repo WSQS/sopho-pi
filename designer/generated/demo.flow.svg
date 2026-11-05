@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1316" height="228" viewBox="0 0 1316 228" data-doc-digest="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8" data-designer-flow="yes" role="img" aria-label="屏与状态的转移图">
+<desc>designer 导出 · 转移图 · 箭头由 transitions 生成 · 文档摘要 sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8</desc>
+<defs><marker id="designer-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1f6feb"/></marker></defs>
+<g class="designer-flow-node" data-node-key="home@@default" data-screen="home" data-state="default" data-default="yes">
+<rect x="32" y="32" width="180" height="56" rx="6" fill="#f2f4f8" stroke="#333333" stroke-width="1"/>
+<text x="42" y="54" font-size="14" fill="#111111">会话</text>
+<text x="42" y="74" font-size="12" fill="#555555">默认（默认）</text>
+</g>
+<g class="designer-flow-node" data-node-key="home@@loading" data-screen="home" data-state="loading" data-default="no">
+<rect x="32" y="108" width="180" height="56" rx="6" fill="#ffffff" stroke="#333333" stroke-width="1"/>
+<text x="42" y="130" font-size="14" fill="#111111">会话</text>
+<text x="42" y="150" font-size="12" fill="#555555">加载中</text>
+</g>
+<g class="designer-flow-node" data-node-key="settings@@default" data-screen="settings" data-state="default" data-default="yes">
+<rect x="292" y="32" width="180" height="56" rx="6" fill="#f2f4f8" stroke="#333333" stroke-width="1"/>
+<text x="302" y="54" font-size="14" fill="#111111">设置</text>
+<text x="302" y="74" font-size="12" fill="#555555">默认（默认）</text>
+</g>
+<g class="designer-flow-node" data-node-key="wide@@default" data-screen="wide" data-state="default" data-default="yes">
+<rect x="552" y="32" width="180" height="56" rx="6" fill="#f2f4f8" stroke="#333333" stroke-width="1"/>
+<text x="562" y="54" font-size="14" fill="#111111">宽面板</text>
+<text x="562" y="74" font-size="12" fill="#555555">默认（默认）</text>
+</g>
+<g class="designer-flow-node" data-node-key="grid@@default" data-screen="grid" data-state="default" data-default="yes">
+<rect x="812" y="32" width="180" height="56" rx="6" fill="#f2f4f8" stroke="#333333" stroke-width="1"/>
+<text x="822" y="54" font-size="14" fill="#111111">网格</text>
+<text x="822" y="74" font-size="12" fill="#555555">默认（默认）</text>
+</g>
+<g class="designer-flow-node" data-node-key="row@@default" data-screen="row" data-state="default" data-default="yes">
+<rect x="1072" y="32" width="180" height="56" rx="6" fill="#f2f4f8" stroke="#333333" stroke-width="1"/>
+<text x="1082" y="54" font-size="14" fill="#111111">横排</text>
+<text x="1082" y="74" font-size="12" fill="#555555">默认（默认）</text>
+</g>
+<path class="designer-arrow" data-transition="t-home-settings" data-from="home@@default" data-to="settings@@default" d="M 122 60 L 382 60" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<path class="designer-arrow" data-transition="t-home-wide" data-from="home@@default" data-to="wide@@default" d="M 122 60 L 642 60" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<path class="designer-arrow" data-transition="t-home-loading" data-from="home@@default" data-to="home@@loading" d="M 122 60 L 122 136" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<path class="designer-arrow" data-transition="t-settings-grid" data-from="settings@@default" data-to="grid@@default" d="M 382 60 L 902 60" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<path class="designer-arrow" data-transition="t-grid-row" data-from="grid@@default" data-to="row@@default" d="M 902 60 L 1162 60" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<path class="designer-arrow" data-transition="t-row-home" data-from="row@@default" data-to="home@@default" d="M 1162 60 L 122 60" fill="none" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#designer-arrowhead)"/>
+<g class="designer-flow-labels">
+<g class="designer-arrow-label" data-transition="t-home-settings">
+<rect class="designer-arrow-label-bg" x="221.5" y="53" width="61" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="252" y="60" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">点「设置」</text>
+</g>
+<g class="designer-arrow-label" data-transition="t-home-wide">
+<rect class="designer-arrow-label-bg" x="357" y="53" width="50" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="382" y="60" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">拉宽面板</text>
+</g>
+<g class="designer-arrow-label" data-transition="t-home-loading">
+<rect class="designer-arrow-label-bg" x="86" y="91" width="72" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="122" y="98" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">首屏请求发出</text>
+</g>
+<g class="designer-arrow-label" data-transition="t-settings-grid">
+<rect class="designer-arrow-label-bg" x="617" y="53" width="50" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="642" y="60" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">打开网格</text>
+</g>
+<g class="designer-arrow-label" data-transition="t-grid-row">
+<rect class="designer-arrow-label-bg" x="1012.5" y="53" width="39" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="1032" y="60" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">看横排</text>
+</g>
+<g class="designer-arrow-label" data-transition="t-row-home">
+<rect class="designer-arrow-label-bg" x="628" y="37" width="28" height="14" rx="2" fill="#ffffff"/>
+<text class="designer-arrow-label-text" x="642" y="44" dy="0.35em" font-size="11" fill="#1f6feb" text-anchor="middle">返回</text>
+</g>
+</g>
+</svg>

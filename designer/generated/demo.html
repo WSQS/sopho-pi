@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计器示例：会话与设置 —— 设计器导出（静态）</title>
+<meta name="designer-doc-digest" content="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8">
+<meta name="designer-doc-version" content="0.1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#ffffff;color:#111111}
+body{font-family:sans-serif;font-size:14px;line-height:1.4}
+.designer-doc{padding:16px}
+.designer-screen-figure{margin:0 0 24px 0}
+.designer-chrome{margin:0 0 4px 0;font-family:monospace;font-size:12px;color:#666666}
+.designer-screen{position:relative;overflow:hidden;background:#ffffff}
+.designer-el{box-sizing:border-box;min-width:0;min-height:0}
+/* 真控件的默认外观先清零：用 :where() 让这条规则的特异性为 0，
+   这样下面按元素生成的 .dNN 规则（文档里写的样式）永远**赢过**它 —— 不许出现
+   「文档写了 textAlign:center，却被重置规则按回去」这种"看起来对、其实没生效"。 */
+:where(.designer-el[data-el-type="input"],.designer-el[data-el-type="button"]){font:inherit;color:inherit;background:transparent;border:0;padding:0;text-align:left;appearance:none}
+:root{
+  --accent: #3b82f6;
+  --card: #15171b;
+  --fg: #e6e6e6;
+  --fg-muted: var(--fg);
+}
+.d0{position:relative}
+.d1{position:absolute;left:16px;top:12px;width:200px;height:24px;color:var(--fg);font-size:20px;font-weight:700}
+.d2{position:absolute;left:16px;top:48px;width:160px;height:60px;color:var(--fg);background-color:var(--card);border-style:solid;border-width:1px;border-radius:8px}
+.d3{position:absolute;left:16px;top:120px;width:160px;height:28px;color:var(--fg);font-size:14px}
+.d4{position:absolute;left:188px;top:120px;width:80px;height:28px;background-color:var(--accent);border-radius:6px;font-size:14px;text-align:center}
+.d5{position:relative}
+.d6{position:absolute;left:16px;top:12px;width:240px;height:24px;color:var(--fg-muted);font-size:20px}
+.d7{position:absolute;left:16px;top:48px;width:368px;height:8px;background-color:var(--accent);border-radius:4px}
+.d8{position:relative}
+.d9{position:absolute;left:20px;top:20px;width:240px;height:160px;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:12px;background-color:var(--card)}
+.d10{align-self:stretch;flex:0 0 auto;height:32px}
+.d11{align-self:stretch;flex:0 0 auto;height:32px}
+.d12{width:max-content;align-self:flex-start;flex:0 0 auto;height:max-content;color:var(--fg);font-size:14px}
+.d13{position:relative}
+.d14{position:absolute;left:10px;top:10px;width:320px;height:100px;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:12px}
+.d15{align-self:stretch;flex:0 0 auto;height:32px}
+.d16{position:relative}
+.d17{position:absolute;left:10px;top:10px;width:280px;height:180px;display:grid;grid-template-columns:repeat(2, 1fr);align-content:start;gap:10px;padding:10px}
+.d18{justify-self:stretch;height:40px;align-self:start}
+.d19{justify-self:stretch;height:40px;align-self:start}
+.d20{justify-self:stretch;height:40px;align-self:start}
+.d21{justify-self:stretch;height:40px;align-self:start}
+.d22{position:relative}
+.d23{position:absolute;left:10px;top:10px;width:280px;height:100px;display:flex;flex-direction:row;gap:12px;align-items:stretch;padding:10px}
+.d24{flex:0 0 auto;width:60px;height:40px;align-self:flex-start}
+.d25{flex:1 1 0;width:auto;height:40px;align-self:flex-start}
+</style>
+</head>
+<body>
+<main class="designer-doc" data-designer-doc-digest="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8">
+<figure class="designer-screen-figure" data-screen-id="home" data-state="default">
+<figcaption class="designer-chrome">会话 · default（另有 1 个状态：loading（有自己那棵树））</figcaption>
+<div class="designer-screen" data-screen-id="home" data-state="default" data-screen-width="400" data-screen-height="300" style="width:400px;height:300px"><div class="designer-el d0" data-el-id="home" data-el-type="container" data-layout="free"><div class="designer-el d1" data-el-id="home-title" data-el-type="text">会话</div><div class="designer-el d2" data-el-id="home-card" data-el-type="rect"></div><input class="designer-el d3" data-el-id="home-input" data-el-type="input" type="text" value="搜索" readonly><button class="designer-el d4" data-el-id="home-button" data-el-type="button" type="button">设置</button></div></div>
+</figure>
+<figure class="designer-screen-figure" data-screen-id="home" data-state="loading">
+<figcaption class="designer-chrome">会话 · loading（这个状态有自己那棵树）</figcaption>
+<div class="designer-screen" data-screen-id="home" data-state="loading" data-screen-width="400" data-screen-height="300" style="width:400px;height:300px"><div class="designer-el d5" data-el-id="home-loading" data-el-type="container" data-layout="free"><div class="designer-el d6" data-el-id="home-loading-hint" data-el-type="text">正在加载…</div><div class="designer-el d7" data-el-id="home-loading-bar" data-el-type="rect"></div></div></div>
+</figure>
+<figure class="designer-screen-figure" data-screen-id="settings" data-state="default">
+<figcaption class="designer-chrome">设置 · default</figcaption>
+<div class="designer-screen" data-screen-id="settings" data-state="default" data-screen-width="400" data-screen-height="300" style="width:400px;height:300px"><div class="designer-el d8" data-el-id="settings" data-el-type="container" data-layout="free"><div class="designer-el d9" data-el-id="settings-panel" data-el-type="container" data-layout="column"><div class="designer-el d10" data-el-id="settings-row-a" data-el-type="rect"></div><div class="designer-el d11" data-el-id="settings-row-b" data-el-type="rect"></div><div class="designer-el d12" data-el-id="settings-hint" data-el-type="text">设置</div></div></div></div>
+</figure>
+<figure class="designer-screen-figure" data-screen-id="wide" data-state="default">
+<figcaption class="designer-chrome">宽面板 · default</figcaption>
+<div class="designer-screen" data-screen-id="wide" data-state="default" data-screen-width="400" data-screen-height="300" style="width:400px;height:300px"><div class="designer-el d13" data-el-id="wide" data-el-type="container" data-layout="free"><div class="designer-el d14" data-el-id="wide-panel" data-el-type="container" data-layout="column"><div class="designer-el d15" data-el-id="wide-row-a" data-el-type="rect"></div></div></div></div>
+</figure>
+<figure class="designer-screen-figure" data-screen-id="grid" data-state="default">
+<figcaption class="designer-chrome">网格 · default</figcaption>
+<div class="designer-screen" data-screen-id="grid" data-state="default" data-screen-width="300" data-screen-height="200" style="width:300px;height:200px"><div class="designer-el d16" data-el-id="grid" data-el-type="container" data-layout="free"><div class="designer-el d17" data-el-id="grid-panel" data-el-type="container" data-layout="grid"><div class="designer-el d18" data-el-id="grid-a" data-el-type="rect"></div><div class="designer-el d19" data-el-id="grid-b" data-el-type="rect"></div><div class="designer-el d20" data-el-id="grid-c" data-el-type="rect"></div><div class="designer-el d21" data-el-id="grid-d" data-el-type="rect"></div></div></div></div>
+</figure>
+<figure class="designer-screen-figure" data-screen-id="row" data-state="default">
+<figcaption class="designer-chrome">横排 · default</figcaption>
+<div class="designer-screen" data-screen-id="row" data-state="default" data-screen-width="300" data-screen-height="120" style="width:300px;height:120px"><div class="designer-el d22" data-el-id="row" data-el-type="container" data-layout="free"><div class="designer-el d23" data-el-id="row-panel" data-el-type="container" data-layout="row"><div class="designer-el d24" data-el-id="row-fixed" data-el-type="rect"></div><div class="designer-el d25" data-el-id="row-fill" data-el-type="rect"></div></div></div></div>
+</figure>
+</main>
+</body>
+</html>

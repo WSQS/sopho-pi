@@ -1,0 +1,90 @@
+node_modules
+*.log
+
+# `test/host-session-path-probe.mjs` 的沙箱根：里面是 `server/**`、`web/**` 的**副本** + 副本 home/会话目录。
+# 正常跑完会自删；`--keep` 或中途被杀时会留下 —— 不 ignore 的话 `git add -A` 可能把副本 home 里的
+# 会话文件一起扫进 git（与本文件下面「别把数据目录快照放进 git」同一条理由）。
+.probe-sandbox/
+
+# `test/design-edit.mjs` 的规格副本沙箱：它**必须在仓库根里面** —— 本门最后要把真门
+# `test/design-spec.mjs` 指到这份副本上重跑（那道门按「仓库根当站点根」拼冻稿 URL，仓外的路径拼不出来）。
+# 正常跑完会自删（门里有一条断言钉它删干净了）；中途被杀会留下 —— 不 ignore 的话 `git add -A`
+# 会把这份 `spec/screens/` 副本扫进 git（与上面那条同一条理由）。
+# ⚠ 2026-10-05：`test/design-edit.mjs` 已随「设计编辑页 v3」退休 ⇒ 现在没有谁再建这个目录；
+# 这条按惯例**留档**（`test/harness.mjs` 拿它当「副本沙箱建在仓库根里」的例证），不是活配置。
+.sopho-designedit-sandbox-*/
+
+# `test/sandbox-hygiene.mjs --reverse-arm=…` 的反证臂副本：把 `bin/sandbox-sweep.mjs` 拷到这里改回旧行为
+# （出口那一行 `process.exitCode = exitCode;` → `process.exit(exitCode);`），再拿**副本里的真门自己**
+# 打它，断言它必红 —— 真树一个字节不动。必须在仓库根**里面**：`.mjs` 是 ESM，`node_modules` 靠向上查找解析。
+# 正常跑完会自删（收敛式删除）并会记账；中途被杀会留下 —— 不 ignore 的话 `git add -A` 会把副本扫进 git。
+.sopho-sandhyg-sandbox-*/
+
+# 调试端点的**常驻反证臂**沙箱：`test/debug-instances.mjs --reverse-arm=…` 与
+# `test/debug-tools.mjs --reverse-arm=…` 把 `server/` ＋ `pi-extensions/` ＋ `web/` 拷到这里改一处，
+# 再拿**真门**去打那份副本（`SOPHO_DEBUG_GATE_ROOT` 指过来），断言它必红 —— 从而**不动正在交付的真树**。
+# 必须建在仓库根**里面**：`.mjs` 是 ESM，但 `node_modules` 靠向上查找解析，建在仓外跑不起来。
+# 正常跑完会自删（`test/harness.mjs` 的 `runGateOnMutatedCopy` 用收敛式删除并会在残留时记账）；
+# 中途被杀会留下 —— 不 ignore 的话 `git add -A` 会把副本的 `server/**` 扫进 git。
+.sopho-debugarm-sandbox-*/
+
+# 「同 cwd 新会话的工具面必须是当前插件」（`test/plugin-cache-freshness.mjs`）的沙箱：本门要在
+# **副本树**的 `pi-extensions/assistant/index.ts` 上增/删一条探针工具（真树一个字节不动），所以它自己
+# 也把 `server/` ＋ `pi-extensions/` ＋ `web/` 拷进 `repoRoot/.sopho-cachefresh-sandbox-*/`；
+# 它的反证臂（`--reverse-arm=stale-cache`）则由 `runGateOnMutatedCopy` 另建 `.sopho-cachearm-sandbox-*/`。
+# 两处都必须在仓库根**里面**：`.mjs` 是 ESM，`node_modules` 靠向上查找解析。
+# 正常跑完会自删（收敛式删除，残留会记账）；中途被杀会留下 —— 不 ignore 的话 `git add -A`
+# 会把副本的 `server/**` 扫进 git。
+.sopho-cachefresh-sandbox-*/
+.sopho-cachearm-sandbox-*/
+
+# `test/big-session-refetch.mjs --reverse-arm=…` 的反证臂副本：把 `web/` 拷到这里改一处
+# （摘掉客户端刷新 URL 上的游标），再拿真门打这份副本（`SOPHO_BIGREFETCH_GATE_ROOT` 指过来），
+# 断言它必红 —— 真树一个字节不动。同样必须在仓库根**里面**：`node_modules` 靠向上查找解析。
+# 正常跑完自删（`runGateOnMutatedCopy`）；中途被杀会留下 —— 不 ignore 的话 `git add -A`
+# 会把这份 `web/**` 副本扫进 git。
+.sopho-bigrefetch-sandbox-*/
+
+# `test/notify-stale-watchdog.mjs --reverse-arm=stale-watchdog-removed` 的反证臂副本：把 `server/` ＋ `pi-extensions/` ＋ `web/`
+# 拷到 `repoRoot/.sopho-notifystale-sandbox-*/`，把 `server/base.mjs` 里那一行 `armStaleWatchdog(record);` 换成
+# `record.staleTimer = null;`（静默看门狗的定时器被拿掉），再拿**真门**打那份副本（`SOPHO_NOTIFY_STALE_GATE_ROOT`
+# 指过来），断言它必红 —— 真树一个字节不动。必须在仓库根**里面**：`.mjs` 是 ESM，`node_modules` 靠向上查找解析。
+# 正常跑完自删（`runGateOnMutatedCopy` 的收敛式删除）；中途被杀会留下 —— 不 ignore 的话 `git add -A`
+# 会把副本的 `server/**` 扫进 git。
+.sopho-notifystale-sandbox-*/
+
+# `test/designer-sample.mjs --reverse-arm=…` 的反证臂副本：把**整棵样例树**
+# （`design/samples/two-pane/`）拷到 `design/samples/.sopho-sample-arm-<随机>/` 改一处，再拿同一道门
+# 打这份副本（`SOPHO_DESIGNER_SAMPLE_ROOT` 指过来）—— 真样例一个字节不动。
+# ⚠️ 必须建在**这个深度**（`design/samples/<名字>`）：样例里的构建模块用 `../../../designer/…` 引库，
+# 仓外或别的深度都解析不到。正常跑完自删（收敛式删除）；中途被杀会留下 —— 不 ignore 的话
+# `git add -A` 会把这份副本（含 `attempts/**`）扫进 git。
+design/samples/.sopho-sample-arm-*/
+
+# ---------------------------------------------------------------------------
+# 敏感文件：只列 git 里**明确不该出现**的那几类，与 bin/hooks/pre-push 的路径规则一一对应。
+#
+# 为什么不是完整的白名单：v2.1 的 .gitignore 是「顶层 /* + 逐个放行」的默认拒绝式白名单，
+#   本线暂时只补这一步（功能平价清单 G-06 只要求恢复密钥闸）。**别把这里当防线** ——
+#   `git add -f` 绕过一切 ignore 规则；真正的机械闸是 pre-push（`bash bin/install-hooks.sh` 装）。
+#
+# 踩过的（v2.1，2026-09-15）：`git add -f tests/` 把 tests/perf/ssh-scroll/raw/{agent,sshd}/
+#   一起扫进 git 并推到远端 —— raw/agent/ 那份 profile 快照里 models.json 带**明文 apiKey**，
+#   raw/sshd/ 是探针私钥。下面两条就是那次事故的肇事路径。
+# ---------------------------------------------------------------------------
+.env
+.env.*
+id_rsa
+id_ed25519
+raw/agent/
+raw/sshd/
+.sopho-docsindex-*-sandbox-*/
+
+# 安卓原型（android/）的构建产物与本地配置：不进 git。
+# 理由同上面那些沙箱条目：这些是**可重建的输出**，进了 git 只会让 `git add -A` 把几十 MB 的
+# APK / dex / R 类扫进去；APK 本身按 docs/ops/android-client.md 的 sha256 + 构建命令复现。
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.kotlin/

@@ -1,0 +1,555 @@
+{
+  "$schema": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "version": "0.1.0",
+  "name": "设计器示例：会话与设置",
+  "tokens": {
+    "--accent": "#3b82f6",
+    "--card": "#15171b",
+    "--fg": "#e6e6e6",
+    "--fg-muted": "var(--fg)"
+  },
+  "screens": [
+    {
+      "id": "home",
+      "name": "会话",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        },
+        {
+          "id": "loading",
+          "name": "加载中",
+          "root": {
+            "id": "home-loading",
+            "type": "container",
+            "size": {
+              "w": {
+                "mode": "fixed",
+                "value": 400
+              },
+              "h": {
+                "mode": "fixed",
+                "value": 300
+              }
+            },
+            "layout": {
+              "mode": "free"
+            },
+            "children": [
+              {
+                "id": "home-loading-hint",
+                "type": "text",
+                "box": {
+                  "x": 16,
+                  "y": 12,
+                  "w": 240,
+                  "h": 24
+                },
+                "style": {
+                  "color": "var(--fg-muted)",
+                  "fontSize": 20
+                },
+                "text": "正在加载…"
+              },
+              {
+                "id": "home-loading-bar",
+                "type": "rect",
+                "box": {
+                  "x": 16,
+                  "y": 48,
+                  "w": 368,
+                  "h": 8
+                },
+                "style": {
+                  "background": "var(--accent)",
+                  "borderRadius": 4
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "root": {
+        "id": "home",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 400
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 300
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "home-title",
+            "type": "text",
+            "box": {
+              "x": 16,
+              "y": 12,
+              "w": 200,
+              "h": 24
+            },
+            "style": {
+              "color": "var(--fg)",
+              "fontSize": 20,
+              "fontWeight": 700
+            },
+            "text": "会话"
+          },
+          {
+            "id": "home-card",
+            "type": "rect",
+            "box": {
+              "x": 16,
+              "y": 48,
+              "w": 160,
+              "h": 60
+            },
+            "style": {
+              "color": "var(--fg)",
+              "background": "var(--card)",
+              "borderRadius": 8,
+              "borderWidth": 1
+            }
+          },
+          {
+            "id": "home-input",
+            "type": "input",
+            "box": {
+              "x": 16,
+              "y": 120,
+              "w": 160,
+              "h": 28
+            },
+            "style": {
+              "color": "var(--fg)",
+              "fontSize": 14
+            },
+            "text": "搜索"
+          },
+          {
+            "id": "home-button",
+            "type": "button",
+            "box": {
+              "x": 188,
+              "y": 120,
+              "w": 80,
+              "h": 28
+            },
+            "style": {
+              "background": "var(--accent)",
+              "borderRadius": 6,
+              "fontSize": 14,
+              "textAlign": "center"
+            },
+            "text": "设置"
+          }
+        ]
+      }
+    },
+    {
+      "id": "settings",
+      "name": "设置",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "settings",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 400
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 300
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "settings-panel",
+            "type": "container",
+            "box": {
+              "x": 20,
+              "y": 20,
+              "w": 240,
+              "h": 160
+            },
+            "layout": {
+              "mode": "column",
+              "gap": 8,
+              "padding": 12
+            },
+            "style": {
+              "background": "var(--card)"
+            },
+            "children": [
+              {
+                "id": "settings-row-a",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 32
+                  }
+                }
+              },
+              {
+                "id": "settings-row-b",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 32
+                  }
+                }
+              },
+              {
+                "id": "settings-hint",
+                "type": "text",
+                "size": {
+                  "w": {
+                    "mode": "content"
+                  },
+                  "h": {
+                    "mode": "content"
+                  }
+                },
+                "style": {
+                  "color": "var(--fg)",
+                  "fontSize": 14
+                },
+                "text": "设置"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "wide",
+      "name": "宽面板",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "wide",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 400
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 300
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "wide-panel",
+            "type": "container",
+            "box": {
+              "x": 10,
+              "y": 10,
+              "w": 320,
+              "h": 100
+            },
+            "layout": {
+              "mode": "column",
+              "gap": 8,
+              "padding": 12
+            },
+            "children": [
+              {
+                "id": "wide-row-a",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 32
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "grid",
+      "name": "网格",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "grid",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 300
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 200
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "grid-panel",
+            "type": "container",
+            "box": {
+              "x": 10,
+              "y": 10,
+              "w": 280,
+              "h": 180
+            },
+            "layout": {
+              "mode": "grid",
+              "gap": 10,
+              "padding": 10,
+              "columns": 2
+            },
+            "children": [
+              {
+                "id": "grid-a",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              },
+              {
+                "id": "grid-b",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              },
+              {
+                "id": "grid-c",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              },
+              {
+                "id": "grid-d",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "row",
+      "name": "横排",
+      "states": [
+        {
+          "id": "default",
+          "name": "默认"
+        }
+      ],
+      "root": {
+        "id": "row",
+        "type": "container",
+        "size": {
+          "w": {
+            "mode": "fixed",
+            "value": 300
+          },
+          "h": {
+            "mode": "fixed",
+            "value": 120
+          }
+        },
+        "layout": {
+          "mode": "free"
+        },
+        "children": [
+          {
+            "id": "row-panel",
+            "type": "container",
+            "box": {
+              "x": 10,
+              "y": 10,
+              "w": 280,
+              "h": 100
+            },
+            "layout": {
+              "mode": "row",
+              "gap": 12,
+              "padding": 10
+            },
+            "children": [
+              {
+                "id": "row-fixed",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fixed",
+                    "value": 60
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              },
+              {
+                "id": "row-fill",
+                "type": "rect",
+                "size": {
+                  "w": {
+                    "mode": "fill"
+                  },
+                  "h": {
+                    "mode": "fixed",
+                    "value": 40
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t-home-settings",
+      "from": {
+        "screen": "home",
+        "state": "default"
+      },
+      "to": {
+        "screen": "settings",
+        "state": "default"
+      },
+      "trigger": "点「设置」"
+    },
+    {
+      "id": "t-home-wide",
+      "from": {
+        "screen": "home",
+        "state": "default"
+      },
+      "to": {
+        "screen": "wide",
+        "state": "default"
+      },
+      "trigger": "拉宽面板"
+    },
+    {
+      "id": "t-home-loading",
+      "from": {
+        "screen": "home",
+        "state": "default"
+      },
+      "to": {
+        "screen": "home",
+        "state": "loading"
+      },
+      "trigger": "首屏请求发出"
+    },
+    {
+      "id": "t-settings-grid",
+      "from": {
+        "screen": "settings",
+        "state": "default"
+      },
+      "to": {
+        "screen": "grid",
+        "state": "default"
+      },
+      "trigger": "打开网格"
+    },
+    {
+      "id": "t-grid-row",
+      "from": {
+        "screen": "grid",
+        "state": "default"
+      },
+      "to": {
+        "screen": "row",
+        "state": "default"
+      },
+      "trigger": "看横排"
+    },
+    {
+      "id": "t-row-home",
+      "from": {
+        "screen": "row",
+        "state": "default"
+      },
+      "to": {
+        "screen": "home",
+        "state": "default"
+      },
+      "trigger": "返回"
+    }
+  ]
+}

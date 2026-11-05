@@ -1,0 +1,19 @@
+/* web/generated/design-values.css —— **生成物，不要手改**。
+ *
+ * 来源（唯一真源）：spec/screens/settings-overlay.md 的「几何表」——每个 `--design-*` 的值就是那一行的「声明值」，**逐字**搬过来。
+ * 生成器：bin/gen-design-values.mjs（一键重跑 `npm run gen:designvalues`；重跑两次字节相同、结果确定）。
+ *
+ * 谁在用它：web/index.html 的 .settings-panel / .tree-session / header，web/slot.css 的最左槽原语。
+ * 那几处声明写成 `var(--design-…, <原来的字面量>)`：生成物在场时取的是这里的值；
+ * `<原来的字面量>` 只是生成物拿不到时的降级（与铺这一层之前逐字相同，见 web/app.js 的
+ * 「拿不到就降级、页面继续」那条口径）。
+ *
+ * 手改这一份没有意义：`npm run test:designspec` 会重跑生成器并与盘上这份**逐字节**比。
+ */
+:root {
+  /* G-06 */ --design-settings-panel-width: 560px;
+  /* G-12 */ --design-settings-panel-gap: 8px;
+  /* G-09 · G-23 */ --design-slot-width: 3px;
+  /* G-22 */ --design-tree-session-height: 26px;
+  /* G-27 */ --design-header-min-height: 54px;
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- libzt 是应用内用户态协议栈：只需要 INTERNET（不建网卡、不占系统 VPN 槽）。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
+      android:icon / android:roundIcon：sopho 的启动图标（A4 几何，与网页 favicon 同一份母版
+      web/brand/sopho-app-icon-a4.svg → drawable/ic_launcher_foreground.xml）。
+      · 只有 adaptive 资源（`mipmap-anydpi-v26` / `-v33`）：minSdk = 26，所有能装本包的设备都认
+        adaptive icon（anydpi 匹配所有密度、v26 匹配 26+）⇒ 不生成 mdpi48…xxxhdpi192 那套 legacy PNG，
+        它们在这台 minSdk 上永远取不到。
+      · roundIcon 与 icon 的图形相同（自适应的遮罩由启动器决定，圆/圆角/方角都不用手画）。
+    -->
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.SophoProto"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="false"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
+        <!--
+          allowBackup="false" + 备份规则：libzt 的 identity（含密钥）只落应用私有目录
+          （filesDir/zerotier），**不许**进 Android 自动备份 —— 两台设备同一身份会撞
+          NODE_IDENTITY_COLLISION（见 docs/plans/android-feishu-dispatcher-reuse.md §8-B6）。
+        -->
+        <!--
+          windowSoftInputMode="adjustResize"：**别让它退化成 adjustPan**。
+          不写这一项时系统给这个 Activity 选的是 pan（AVD 实测 `mAttrs sim={adjust=pan ...}`）：
+          键盘弹起时整个窗口被**平移**上去，而 Compose 又按 `safeDrawingPadding()` 给内容加了
+          一整份 IME 高度 ⇒ 输入框与键盘之间多出一个键盘高度的空白（2026-10-23 业主反馈 C）。
+          adjustResize 下窗口不平移，键盘高度只由 WindowInsets 消费一次。
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

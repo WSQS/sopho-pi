@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120" viewBox="0 0 300 120" data-doc-digest="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8" data-designer-screen="row" data-designer-state="default" role="img" aria-label="横排 · default">
+<desc>designer 导出 · 屏 row · 状态 default · 文档摘要 sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8</desc>
+<rect data-el-id="row" data-el-type="container" x="0" y="0" width="300" height="120" fill="none"/>
+<rect data-el-id="row-panel" data-el-type="container" x="10" y="10" width="280" height="100" fill="none"/>
+<rect data-el-id="row-fixed" data-el-type="rect" x="20" y="20" width="60" height="40" fill="none"/>
+<rect data-el-id="row-fill" data-el-type="rect" x="92" y="20" width="188" height="40" fill="none"/>
+</svg>

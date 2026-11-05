@@ -1,0 +1,55 @@
+{
+  "$schema": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "version": "0.1.0",
+  "name": "箭头起点锚点夹具",
+  "tokens": {},
+  "screens": [
+    {
+      "id": "left",
+      "name": "左屏",
+      "states": [
+        { "id": "default", "name": "默认" }
+      ],
+      "root": {
+        "id": "left-root",
+        "type": "container",
+        "size": { "w": { "mode": "fixed", "value": 360 }, "h": { "mode": "fixed", "value": 112 } },
+        "layout": { "mode": "free" },
+        "children": [
+          { "id": "left-panel", "type": "rect", "box": { "x": 20, "y": 40, "w": 80, "h": 32 }, "style": { "background": "#3355ff" } },
+          { "id": "left-footer", "type": "rect", "box": { "x": 20, "y": 80, "w": 80, "h": 20 }, "style": { "background": "#22aa66" } }
+        ]
+      }
+    },
+    {
+      "id": "right",
+      "name": "右屏",
+      "states": [
+        { "id": "default", "name": "默认" }
+      ],
+      "root": {
+        "id": "right-root",
+        "type": "container",
+        "size": { "w": { "mode": "fixed", "value": 360 }, "h": { "mode": "fixed", "value": 112 } },
+        "layout": { "mode": "free" },
+        "children": [
+          { "id": "right-panel", "type": "rect", "box": { "x": 20, "y": 40, "w": 80, "h": 32 }, "style": { "background": "#ff8800" } }
+        ]
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t-anchored",
+      "from": { "screen": "left", "state": "default", "anchor": { "selector": "#left-panel" } },
+      "to": { "screen": "right", "state": "default" },
+      "trigger": "点左屏那块主面板"
+    },
+    {
+      "id": "t-plain",
+      "from": { "screen": "left", "state": "default" },
+      "to": { "screen": "right", "state": "default" },
+      "trigger": "不带锚点的对照：起点仍是节点中心"
+    }
+  ]
+}

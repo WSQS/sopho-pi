@@ -1,0 +1,208 @@
+#!/bin/sh
+# sopho-pi pre-push 钩子：推送前扫"即将推出去的提交"，命中密钥 / 私钥 / 数据目录快照就拒绝。
+#
+# v2.2 线：本脚本从 v2.1 那条线（tag `v2.1-final`）**整份迁来**（docs/feature-parity.md G-06，P0 安全项）。
+#   除本段注释外，扫法 / 规则 / 逃生口与 `v2.1-final:bin/hooks/pre-push` **逐字相同**
+#   （核对法：两侧都滤掉 `^#` 行与空行后 diff 应为空）。
+#   机械契约在 test/pre-push.mjs（`npm run test:prepush`）。
+#
+# 为什么要有它（2026-09-15 真出过两次）：
+#   `git add -f tests/` 把 tests/perf/ssh-scroll/raw/agent/（profile 快照，models.json 带明文
+#   litellm apiKey）与 raw/sshd/（探针私钥）提交并推到远端。重写历史清掉后，另一台机器的克隆
+#   一 `git pull --rebase`，那条本地提交被**重放**到新历史上、并被当成快进推了回来（保护分支只挡
+#   force push，不挡这个）。这个钩子必须能拦住"rebase 重放出来的那条提交"。
+#
+# 安装：bash bin/install-hooks.sh      （= git config core.hooksPath bin/hooks）
+# 逃生口（留痕放行）：SOPHO_PREPUSH_ALLOW=1 git push
+# 或直接：git push --no-verify
+#
+# 只用 POSIX sh 语法（#!/bin/sh）—— Windows 的 Git for Windows 也走这一份。
+# 退出码非 0 ⇒ git 中止本次推送。
+
+set -u
+
+# ------------------------------------------------------------------ 规则
+# 内容规则（grep -E）：
+#   sk-…（含 sk-proj- / sk-ant-）· PEM 私钥头 · AWS AKIA · GitHub ghp_ · GitLab glpat- · Slack xox…
+PAT='sk-[A-Za-z0-9_-]{16,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|glpat-[A-Za-z0-9_-]{20,}|xox[baprs]-'
+# 超过 2 MB 的 blob 不做内容扫描（别让钩子把推送拖成事故），只报数
+MAXBLOB=2097152
+ZERO=0000000000000000000000000000000000000000
+NL='
+'
+
+# --------------------------------------------------- 逃生口（留痕的 --no-verify）
+if [ "${SOPHO_PREPUSH_ALLOW:-}" = "1" ]; then
+	printf '\n' >&2
+	printf '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n' >&2
+	printf '!! SOPHO_PREPUSH_ALLOW=1 —— 跳过 pre-push 扫描，敏感内容将被直接推送  !!\n' >&2
+	printf '!! 这是一次「留痕放行」。若含密钥，请事后吊销并重写历史。            !!\n' >&2
+	printf '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n' >&2
+	printf '\n' >&2
+	exit 0
+fi
+
+# ----------------------------------------------------------- 临时工作区
+TMP=$(mktemp -d 2>/dev/null) || TMP=$(mktemp -d -t sopho-prepush 2>/dev/null) || TMP=""
+if [ -z "$TMP" ]; then
+	TMP="${TMPDIR:-/tmp}/sopho-prepush-$$"
+	mkdir -p "$TMP" 2>/dev/null || TMP="."
+fi
+trap 'rm -rf "$TMP"' EXIT INT TERM HUP
+
+HITS="$TMP/hits"
+: > "$HITS"
+SKIPPED=0
+DEGRADED=""
+
+# 全 0 / 空 ⇒ 真
+is_zero() {
+	case "${1:-}" in
+	*[!0]*) return 1 ;;
+	*) return 0 ;;
+	esac
+}
+
+mask() { # 密钥只留前 6 位 + 长度（绝不打印原文）
+	_p=$(printf '%s' "$1" | cut -c1-6)
+	_l=${#1}
+	printf '%s…（共 %s 字节）' "$_p" "$_l"
+}
+
+classify() {
+	case "$1" in
+	sk-*) printf '内容规则 sk-*（云 API key）' ;;
+	-----BEGIN*) printf '内容规则 PRIVATE KEY 头' ;;
+	AKIA*) printf '内容规则 AKIA*（AWS Access Key）' ;;
+	ghp_*) printf '内容规则 ghp_*（GitHub PAT）' ;;
+	glpat-*) printf '内容规则 glpat-*（GitLab PAT）' ;;
+	xox*) printf '内容规则 xox[baprs]-（Slack token）' ;;
+	*) printf '内容规则 敏感串' ;;
+	esac
+}
+
+hit() { # sha<TAB>path<TAB>rule<TAB>evidence
+	printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >> "$HITS"
+}
+
+# ------------------------------------------------------------------ 主循环
+while read -r local_ref local_sha remote_ref remote_sha; do
+	[ -n "${local_sha:-}" ] || continue
+
+	# 形状 3：删除分支/标签（local sha 全 0）→ 跳过
+	if is_zero "$local_sha"; then
+		continue
+	fi
+
+	# 判定范围形状
+	BEFORE=""
+	if is_zero "$remote_sha"; then
+		# 形状 2：新分支/新标签（remote sha 全 0）→ 扫 local sha 可达的提交
+		BEFORE=""
+	elif git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then
+		# 形状 1：普通推送 → 扫 remote..local
+		BEFORE="$remote_sha"
+	else
+		# 形状 4：远端 sha 未知（force push 常见）→ 退化成扫整条历史
+		BEFORE=""
+		DEGRADED="${DEGRADED}  · ${remote_ref}：远端 sha ${remote_sha} 未知，已退化为扫 ${local_sha} 可达的**整条历史**（宁慢不放过）${NL}"
+	fi
+
+	OBJ="$TMP/obj"
+	if [ -n "$BEFORE" ]; then
+		git rev-list --objects "$BEFORE..$local_sha" > "$OBJ" 2>/dev/null
+	else
+		git rev-list --objects "$local_sha" > "$OBJ" 2>/dev/null
+	fi
+	[ -s "$OBJ" ] || continue
+
+	# 对象 → 只留 blob，带上 size 与 path
+	awk '{print $1}' "$OBJ" > "$TMP/shas"
+	git cat-file --batch-check < "$TMP/shas" > "$TMP/check" 2>/dev/null
+	BLOBS="$TMP/blobs"
+	awk 'NR==FNR{ if($2=="blob") sz[$1]=$3+0; next }
+	     { sha=$1; p=$0; sub(/^[^ ]+ /,"",p); if (sha in sz) printf "%s\t%d\t%s\n", sha, sz[sha], p }' \
+		"$TMP/check" "$OBJ" > "$BLOBS"
+
+	TAB=$(printf '\t')
+
+	# 路径规则（这次真正的肇事者；内容可能不含 sk- 也该拦）
+	while IFS="$TAB" read -r psha psize ppath; do
+		[ -n "${ppath:-}" ] || continue
+		case "/$ppath" in
+		*/raw/agent/*|*/raw/sshd/*)
+			hit "$local_sha" "$ppath" "路径规则 raw/{agent,sshd}/ 数据目录快照" ""
+			;;
+		esac
+		pbase=${ppath##*/}
+		case "$pbase" in
+		id_rsa|id_ed25519)
+			hit "$local_sha" "$ppath" "路径规则 私钥文件名 $pbase" ""
+			;;
+		.env|.env.*)
+			hit "$local_sha" "$ppath" "路径规则 .env 文件" ""
+			;;
+		esac
+	done < "$BLOBS"
+
+	# 大 blob 计数（路径规则已在上一步审过，大文件内容不看）
+	n=$(awk -F"$TAB" -v lim="$MAXBLOB" '$2>lim' "$BLOBS" | wc -l)
+	SKIPPED=$((SKIPPED + n))
+
+	# 内容规则：先一把 grep 做触发（干净推送走这条快路，零额外进程），
+	# 只有命中才逐 blob 精确定位（命中是异常路径，慢无所谓）。
+	awk -F"$TAB" -v lim="$MAXBLOB" '$2<=lim{print $1}' "$BLOBS" | sort -u > "$TMP/qualify"
+	if [ -s "$TMP/qualify" ]; then
+		if git cat-file --batch < "$TMP/qualify" 2>/dev/null | grep -a -E -q "$PAT"; then
+			while read -r qsha; do
+				# 已知的**测试夹具**字面量（`test/image-generate.mjs` 用它验证 401 回执把 key 抹成 `<redacted-key>`；
+				# 运行时仍是同一串，不是真凭据）。
+				# 只放过**这一个精确字面量**：同一个 blob 里还有别的命中，照样红。
+				FAKE_ALLOW='sk-abcdefghijklmnopq'
+				toks=$(git cat-file -p "$qsha" 2>/dev/null | grep -a -o -E "$PAT" | grep -v -x -F "$FAKE_ALLOW")
+				tok=$(printf '%s\n' "$toks" | head -n 1)
+				[ -n "$tok" ] || continue
+				qpath=$(awk -F"$TAB" -v s="$qsha" '$1==s{print $3; exit}' "$BLOBS")
+				hit "$local_sha" "$qpath" "$(classify "$tok")" "$(mask "$tok")"
+			done < "$TMP/qualify"
+		fi
+	fi
+done
+
+# ------------------------------------------------------------------ 输出
+if [ -n "$DEGRADED" ]; then
+	printf '[pre-push] 退化扫描提示：\n%s' "$DEGRADED" >&2
+fi
+
+if [ ! -s "$HITS" ]; then
+	if [ "$SKIPPED" -gt 0 ]; then
+		printf '[pre-push] 跳过 %s 个超过 %s 字节的大 blob（未做内容扫描）\n' "$SKIPPED" "$MAXBLOB" >&2
+	fi
+	exit 0
+fi
+
+{
+	printf '\n'
+	printf '✖ pre-push 拦截：即将推送的内容命中敏感规则，git 已中止本次推送。\n'
+	printf '   （以下提交/文件**没有**被推出去）\n\n'
+	while IFS="$TAB" read -r hsha hpath hrule hev; do
+		c=$(git log --format=%h -1 "$hsha" -- "$hpath" 2>/dev/null)
+		[ -n "$c" ] || c=$(printf '%s' "$hsha" | cut -c1-10)
+		if [ -n "$hev" ]; then
+			printf '  · 提交 %s  文件 %s\n      %s   证据：%s\n' "$c" "$hpath" "$hrule" "$hev"
+		else
+			printf '  · 提交 %s  文件 %s\n      %s\n' "$c" "$hpath" "$hrule"
+		fi
+	done < "$HITS"
+	if [ "$SKIPPED" -gt 0 ]; then
+		printf '\n  （另跳过 %s 个超过 %s 字节的大 blob，未做内容扫描）\n' "$SKIPPED" "$MAXBLOB"
+	fi
+	printf '\n  两条出路：\n'
+	printf '    1) 把文件从提交里拿掉，再推：\n'
+	printf '       git rm --cached <文件>   # 然后重写这条提交（如 git commit --amend）\n'
+	printf '    2) 明知故犯（留痕）：\n'
+	printf '       git push --no-verify          或者   SOPHO_PREPUSH_ALLOW=1 git push\n'
+	printf '\n'
+} >&2
+
+exit 1

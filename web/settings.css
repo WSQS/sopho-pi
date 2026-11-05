@@ -1,0 +1,107 @@
+:root {
+  color-scheme: dark;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "PingFang SC", "Microsoft YaHei", monospace;
+  --bg: #0f1013;
+  --panel: #121318;
+  --raised: #16171c;
+  --line: #292b31;
+  --muted: #7c7f8a;
+  --text: #c7c9cf;
+  --bright: #e3e8e4;
+  --accent: #8abeb7;
+  --danger: #e06868;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--bright); }
+[hidden] { display: none !important; }
+
+.settings-page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.2rem 1rem 2rem;
+  display: grid;
+  gap: .9rem;
+}
+.settings-page > header {
+  display: grid;
+  gap: .3rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--line);
+}
+.settings-back { font-size: 12px; }
+.settings-page h1 { margin: 0; font-size: 15px; font-weight: 600; color: var(--bright); }
+.settings-lede { margin: 0; line-height: 1.6; }
+
+.settings-card {
+  display: grid;
+  gap: .55rem;
+  padding: .7rem .75rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+}
+.settings-card h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--bright); }
+.settings-hint { margin: 0; line-height: 1.6; }
+
+.settings-field { display: grid; gap: .35rem; }
+.settings-option {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+  padding: .38rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--raised);
+  cursor: pointer;
+}
+.settings-option:hover { border-color: #4a4d56; }
+.settings-option input { margin: .15rem 0 0; accent-color: var(--accent); }
+.settings-option input:disabled { cursor: default; }
+.settings-option span { display: grid; gap: .12rem; color: var(--text); }
+.settings-option small { color: var(--muted); }
+.settings-option:has(input:checked) { border-color: var(--accent); }
+
+/* 同 `.settings-panel-state`（浮层里那一条）**同一个病、同一把尺子**：这一页的状态行也会原样回显服务端
+   的错误人话（真形状：真侧车坏掉时 500 的 message 带一段无断点的长值与文件全路径）。独立页没有 `overflow:auto`
+   的容器接住溢出（`.settings-page` 是 `max-width: 46rem` 的 grid，`auto` 轨道会被顶宽）⇒ 修前实测整页真横向
+   滚动：1200×760 `documentElement.scrollWidth 2017 / innerWidth 1200`（420×820：1470 / 420）。
+   与浮层那一处一字不差的两条：`min-width: 0` 断在 min-content 源头 ＋ `overflow-wrap: anywhere` 让长 token 折行。 */
+.settings-state { margin: 0; min-height: 1rem; line-height: 1.6; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.settings-state[data-kind="error"] { color: var(--danger); }
+.settings-state[data-kind="ok"] { color: var(--accent); }
+.settings-code { color: var(--text); }
+
+/* ② 维护者会话：一个文本框 + 一个保存按钮（同一页的两种控件形状，都用既有变量画） */
+.settings-input {
+  width: 100%;
+  padding: .38rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+}
+.settings-input:focus-visible { outline: 1px solid var(--accent); border-color: var(--accent); }
+.settings-input:disabled { color: var(--muted); }
+.settings-actions { display: flex; gap: .4rem; }
+.settings-button {
+  padding: .32rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.settings-button:hover:not(:disabled) { border-color: #4a4d56; color: var(--bright); }
+.settings-button:disabled { cursor: default; color: var(--muted); }
+
+.settings-foot { margin: 0; line-height: 1.6; font-size: 12px; }

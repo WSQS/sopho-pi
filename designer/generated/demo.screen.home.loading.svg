@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" data-doc-digest="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8" data-designer-screen="home" data-designer-state="loading" role="img" aria-label="会话 · loading">
+<desc>designer 导出 · 屏 home · 状态 loading · 文档摘要 sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8</desc>
+<rect data-el-id="home-loading" data-el-type="container" x="0" y="0" width="400" height="300" fill="none"/>
+<text data-el-id="home-loading-hint" data-el-type="text" x="16" y="32" font-size="20" fill="#e6e6e6">正在加载…</text>
+<rect data-el-id="home-loading-bar" data-el-type="rect" x="16" y="48" width="368" height="8" fill="#3b82f6" rx="4"/>
+</svg>

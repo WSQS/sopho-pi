@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sopho.invalid/schema/designer/0.1.0.json",
+  "title": "通用设计器中立文档",
+  "description": "只表示**语义**（是什么 / 装在谁里面 / 想多大 / 按哪个 token 上色 / 在哪些状态下在场 / 能去哪），不表示任何平台或渲染细节。这份 schema 是**结构判据的唯一来源**：designer/validate.mjs 直接解释它，字段名与封闭集合（type / layout.mode / size.mode / align / style 的键）都从这里读 —— 改这份文件就会改校验行为（test/designer-model.mjs 有一条反证臂钉这件事）。schema 只增不改、id 永不变（业主 2026-09-25 口径）。",
+  "type": "object",
+  "title": "文档",
+  "required": ["version", "screens"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "title": "本文档按哪份 schema 读",
+      "description": "一个 URL；校验器不联网、只用它做记录（本仓没有任何东西会去取这个 URL）。"
+    },
+    "version": {
+      "type": "string",
+      "title": "文档格式版本",
+      "description": "不是产品版本。今天只认识 0.1.0；不认识的版本**必须报错**，不许猜着读。",
+      "enum": ["0.1.0"]
+    },
+    "name": {
+      "type": "string",
+      "title": "文档名",
+      "minLength": 1,
+      "description": "人读的名字（门报红时也用它指路）。"
+    },
+    "tokens": {
+      "type": "object",
+      "title": "token 表",
+      "description": "键是 CSS 自定义属性名（以 -- 开头）；值是字符串或数。值可以是字面量，也可以是 var(--别的 token) 引用（引用必须闭合、不许成环）。",
+      "propertyNames": { "pattern": "^--[a-zA-Z0-9_-]+$" },
+      "additionalProperties": { "type": ["string", "number"] }
+    },
+    "components": {
+      "type": "array",
+      "title": "组件目录（可复用元素的一等定义）",
+      "description": "Figma 的 component：把一个元素树提成**可复用单元**。屏幕树里用 `{ \"type\": \"instance\", \"ref\": <组件 id> }` 引用它，而不是手抄一份。这份数组是**只增**字段：不写它的文档序列化与生成的字节逐字节不变。",
+      "items": { "$ref": "#/$defs/component" }
+    },
+    "screens": {
+      "type": "array",
+      "title": "屏",
+      "description": "一族屏。一屏 = 一次「人能同时看到的一个画面」＋它的一组状态；多屏是这里多一项，不是状态。",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/screen" }
+    },
+    "transitions": {
+      "type": "array",
+      "title": "转移",
+      "description": "屏与屏、屏内状态与状态之间的箭头**数据**。箭头是这份数据的视图，不许直接画。",
+      "items": { "$ref": "#/$defs/transition" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "component": {
+      "type": "object",
+      "title": "组件（可复用元素）",
+      "description": "一等可复用单元：`root` 是它的默认树；`variants` 是它的变体（Figma 的 component set）。实例（`type: instance`）用 `ref` 指它。组件树里的元素 id 与别的元素一样参与「全文档唯一」。",
+      "required": ["id", "root"],
+      "properties": {
+        "id": { "type": "string", "title": "组件 id", "minLength": 1, "description": "实例的 `ref` 指它。全文档唯一，不复用。" },
+        "name": { "type": "string", "title": "组件名", "minLength": 1 },
+        "variants": {
+          "type": "array",
+          "title": "变体（元素级 states）",
+          "description": "同一组件的一组变体。每个变体 = 对 `root` 那棵树的**逐元素覆盖**（`overrides`）；只列 `id`、不带 `overrides` 的变体就是默认形态，一个字节也不改。空数组 / 不写 = 只有默认形态。",
+          "items": { "$ref": "#/$defs/variant" }
+        },
+        "root": { "$ref": "#/$defs/element", "title": "组件的默认树" }
+      },
+      "additionalProperties": false
+    },
+    "variant": {
+      "type": "object",
+      "title": "变体",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "title": "变体 id", "minLength": 1, "description": "同一组件里唯一；实例的 `variant` 指它。" },
+        "name": { "type": "string", "title": "变体名", "minLength": 1 },
+        "overrides": { "$ref": "#/$defs/overrideMap", "title": "这个变体的覆盖" }
+      },
+      "additionalProperties": false
+    },
+    "overrideMap": {
+      "type": "object",
+      "title": "逐元素覆盖表",
+      "description": "键 = 组件树里某个元素的 id；值 = 要盖在它上面的字段。合并语义（**写死在这里**）：对象逐键**深合并**（`style.border.left.color` 只改那一格），数组与标量（含 `text`）整体替换。",
+      "additionalProperties": { "$ref": "#/$defs/elementOverride" }
+    },
+    "elementOverride": {
+      "type": "object",
+      "title": "一个元素的覆盖",
+      "description": "只许改这几样。`id` / `type` / `ref` / `variant` / `overrides` 不许改（身份与复用关系不是「覆盖」能动的），`children` 也不许（增删子树不是覆盖）。",
+      "properties": {
+        "name": { "$ref": "#/$defs/element/properties/name" },
+        "box": { "$ref": "#/$defs/element/properties/box" },
+        "size": { "$ref": "#/$defs/element/properties/size" },
+        "layout": { "$ref": "#/$defs/element/properties/layout" },
+        "style": { "$ref": "#/$defs/element/properties/style" },
+        "text": { "$ref": "#/$defs/element/properties/text" }
+      },
+      "additionalProperties": false
+    },
+    "borderEdge": {
+      "type": "object",
+      "title": "一条边",
+      "properties": {
+        "width": { "type": "number", "title": "这条边的宽", "minimum": 0 },
+        "color": { "type": "string", "title": "这条边的色", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "screen": {
+      "type": "object",
+      "title": "屏",
+      "required": ["id", "root"],
+      "properties": {
+        "id": { "type": "string", "title": "屏 id", "minLength": 1 },
+        "name": { "type": "string", "title": "屏名", "minLength": 1 },
+        "states": {
+          "type": "array",
+          "title": "状态",
+          "description": "同一屏的变体；第一项是默认状态（它的树就是 root）。",
+          "items": { "$ref": "#/$defs/state" }
+        },
+        "root": { "$ref": "#/$defs/element" }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "title": "状态",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "title": "状态 id", "minLength": 1 },
+        "name": { "type": "string", "title": "状态名", "minLength": 1 },
+        "root": {
+          "$ref": "#/$defs/element",
+          "title": "这个状态自己的树",
+          "description": "可选。第 0 个状态不用写（它的树就是 screens[].root）；第 j>0 个状态带了 root 就是它自己的树。B 半 2026-09-26 的加法（见 docs/design/designer-ui.md §1.1）；给了 states[0].root ⇒ 导出器以 screens[].root 为准，并给一条警告。元素 id 仍然**全文档唯一**（状态树里的 id 不能和别处撞）。"
+        }
+      },
+      "additionalProperties": false
+    },
+    "element": {
+      "type": "object",
+      "title": "元素",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "title": "元素 id", "minLength": 1, "description": "创建时分配、此后永不变；全文档唯一（不按屏分作用域），不复用。" },
+        "type": {
+          "type": "string",
+          "title": "元素种类",
+          "description": "「是什么」。封闭集合：container | rect | text | image | input | button | instance。`instance` = 对 `components[]` 里某个组件的**引用**（Figma 的 instance），它自己不带 children（子元素来自组件）。",
+          "enum": ["container", "rect", "text", "image", "input", "button", "instance"]
+        },
+        "ref": {
+          "type": "string",
+          "title": "引用的组件 id",
+          "minLength": 1,
+          "description": "只有 `type: instance` 用：指向 `components[]` 里某个组件的 id（必须指得到，否则文档不合法）。"
+        },
+        "variant": {
+          "type": "string",
+          "title": "变体 id",
+          "minLength": 1,
+          "description": "只有 `type: instance` 用：选组件的哪个变体；省掉 = 默认形态。指不到那个组件的变体就拒收。"
+        },
+        "overrides": {
+          "$ref": "#/$defs/overrideMap",
+          "title": "逐实例覆盖",
+          "description": "只有 `type: instance` 用：在这个实例上再盖一层（同一元素同一字段时**实例优先于变体**）。键必须是组件树里真实存在的元素 id。"
+        },
+        "name": { "type": "string", "title": "元素名", "minLength": 1, "description": "给人看的名字；语义不靠它。" },
+        "box": {
+          "type": "object",
+          "title": "坐标盒子",
+          "description": "只给自由布局（free）容器里的子元素用：左上的 x/y 与宽高，单位是设计单位（导出器按 px 落地）。",
+          "required": ["x", "y", "w", "h"],
+          "properties": {
+            "x": { "type": "number", "title": "x" },
+            "y": { "type": "number", "title": "y" },
+            "w": { "type": "number", "title": "宽", "minimum": 0 },
+            "h": { "type": "number", "title": "高", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "size": {
+          "type": "object",
+          "title": "尺寸约束",
+          "description": "自动布局（row/column/grid）里子元素用什么尺寸：每轴一条约束。",
+          "properties": {
+            "w": { "$ref": "#/$defs/constraint" },
+            "h": { "$ref": "#/$defs/constraint" }
+          },
+          "additionalProperties": false
+        },
+        "layout": {
+          "type": "object",
+          "title": "布局",
+          "description": "只有 container 有：free | row | column | grid。",
+          "required": ["mode"],
+          "properties": {
+            "mode": { "type": "string", "title": "布局模式", "enum": ["free", "row", "column", "grid"] },
+            "gap": { "type": "number", "title": "间距", "minimum": 0 },
+            "padding": {
+              "title": "内边距",
+              "description": "一个数，或 1–4 个数组成的数组（CSS 的 top / right / bottom / left 顺序）。",
+              "anyOf": [
+                { "type": "number", "minimum": 0 },
+                { "type": "array", "items": { "type": "number", "minimum": 0 }, "minItems": 1, "maxItems": 4 }
+              ]
+            },
+            "columns": { "type": "integer", "title": "网格列数", "minimum": 1 },
+            "align": {
+              "type": "string",
+              "title": "交叉轴对齐",
+              "enum": ["start", "center", "end", "stretch"]
+            }
+          },
+          "additionalProperties": false
+        },
+        "style": {
+          "type": "object",
+          "title": "样式",
+          "description": "只放**引用或字面值**：推荐写成 var(--token)；字面量是它的一次具体取值。展开成 CSS 的映射由导出器负责。",
+          "properties": {
+            "color": { "type": "string", "title": "前景色", "minLength": 1 },
+            "background": { "type": "string", "title": "背景色", "minLength": 1 },
+            "borderRadius": { "type": "number", "title": "圆角", "minimum": 0 },
+            "borderWidth": { "type": "number", "title": "边框宽", "minimum": 0 },
+            "border": {
+              "type": "object",
+              "title": "边框（可单边，Figma 的 stroke）",
+              "description": "四边可各给宽与色（Figma 的单边 stroke）。`width`/`color` 是四边的默认；`top`/`right`/`bottom`/`left` 逐边覆盖。给了 `border` 就以它为准（旧字段 `borderWidth` 不再参与这条元素的边框）。四边同宽同色时渲染与旧字段逐字节相同。",
+              "properties": {
+                "width": { "type": "number", "title": "四边宽", "minimum": 0 },
+                "color": { "type": "string", "title": "四边色", "minLength": 1 },
+                "top": { "$ref": "#/$defs/borderEdge" },
+                "right": { "$ref": "#/$defs/borderEdge" },
+                "bottom": { "$ref": "#/$defs/borderEdge" },
+                "left": { "$ref": "#/$defs/borderEdge" }
+              },
+              "additionalProperties": false
+            },
+            "fontSize": { "type": "number", "title": "字号", "minimum": 0 },
+            "fontWeight": { "type": "number", "title": "字重", "minimum": 1 },
+            "fontFamily": { "type": "string", "title": "字族", "minLength": 1 },
+            "textAlign": { "type": "string", "title": "横向对齐", "enum": ["left", "center", "right", "justify"] }
+          },
+          "additionalProperties": false
+        },
+        "text": { "type": "string", "title": "文本", "description": "text / input / button 的文字内容。" },
+        "children": {
+          "type": "array",
+          "title": "子元素",
+          "description": "只有 container 有。**数组顺序 = 绘制顺序**（后面的压在上面）；不引入 z-index。",
+          "items": { "$ref": "#/$defs/element" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "constraint": {
+      "type": "object",
+      "title": "一条尺寸约束",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "title": "尺寸模式",
+          "enum": ["fixed", "fill", "content"],
+          "description": "fixed = 一个确定的数（必须给 value）；fill = 跟随父容器（不占满就拉伸）；content = 由内容决定。"
+        },
+        "value": { "type": "number", "title": "固定值", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "transition": {
+      "type": "object",
+      "title": "转移",
+      "required": ["id", "from", "to", "trigger"],
+      "properties": {
+        "id": { "type": "string", "title": "转移 id", "minLength": 1 },
+        "from": { "$ref": "#/$defs/transitionEnd" },
+        "to": { "$ref": "#/$defs/transitionEnd" },
+        "trigger": { "type": "string", "title": "触发", "minLength": 1, "description": "人读的一句（例如「点右上角『设置』」）。它是这件事的**文字**，不是平台事件名。" }
+      },
+      "additionalProperties": false
+    },
+    "transitionEnd": {
+      "type": "object",
+      "title": "转移的一端",
+      "required": ["screen", "state"],
+      "properties": {
+        "screen": { "type": "string", "title": "屏 id", "minLength": 1 },
+        "state": { "type": "string", "title": "状态 id", "minLength": 1, "description": "**必填**：转移的每一端都要写成 {screen, state}。省掉它的文档在转移图里一根箭头都画不出来（页面那条路径没有「缺省 = 默认状态」这条实现），而旧口径会静默收下它 —— 见 docs/design/designer-format.md §1~§3。⚠️ 2026-09-25 收严：这条以前是可选的（缺了按该屏 states[0] 算），现在缺了就拒收 ⇒ **这是破坏性改动**，按旧口径写的文档要补上那屏 states[0].id 才能再用。" },
+        "anchor": {
+          "type": "object",
+          "title": "起点锚",
+          "description": "可选（只对 `from` 端有意义）。给了它 ⇒ 转移图里这根箭头的**起点取那个控件的盒子边**（朝向目标那一侧），而不是 (屏,状态) 节点的中心；`to` 端没有这个字段。没给 ⇒ 照旧走节点中心那条路（向后兼容）。",
+          "required": ["selector"],
+          "properties": {
+            "selector": { "type": "string", "title": "CSS 选择器", "minLength": 1, "description": "在 `from` 那个屏/状态树里定位一个元素。本仓元素的唯一稳定定位方式是 id（全文档唯一），所以导出器只认 `#<元素 id>` 这一种写法；别的写法（`.class` / `[id=…]` / 组合器）如实报错、不猜（猜错会画出「看着对、其实指错控件」的箭头）。" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

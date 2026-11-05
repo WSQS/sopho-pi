@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  sopho 应用图标 · A4 的**单色（themed icon）**层，API 33+ 用。
+
+  只放 `#fg` 那三块几何的**不透明形状**：系统会把整层染色（颜色由系统主题/壁纸决定，
+  与品牌色无关），真正被读到的是 alpha 通道。所以这里：
+    · 不含母版的深底 `#bg` —— 深底在单色模式下不是一条“形状”，把它整块涂上来会得到一个
+      实心方块（这正是要去掉的东西）；
+    · 几何与 `ic_launcher_foreground.xml` 逐字相同（同一条 pathData、同一个 3/32 等比组），
+      只是 fill 取白（染色时被替换，取什么颜色都只是占位，用白是为了“只表达 alpha”读起来最直白）。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.09375"
+        android:scaleY="0.09375"
+        android:translateX="6"
+        android:translateY="6">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M256,320 A64,64 0 0 1 320,384 L320,640 A64,64 0 0 1 256,704 A64,64 0 0 1 192,640 L192,384 A64,64 0 0 1 256,320 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M512,320 L768,320 A64,64 0 0 1 832,384 L832,576 A64,64 0 0 1 768,640 L512,640 A64,64 0 0 1 448,576 L448,384 A64,64 0 0 1 512,320 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M 512 624 L 640 624 L 576 704 L 512 704 Z" />
+    </group>
+</vector>

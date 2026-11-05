@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- sopho 启动图标（adaptive, API 26+）：背景＝母版深底平涂，前景＝A4 几何（见 drawable/ic_launcher_foreground.xml）。
+     前景已按 66dp 安全区等比缩到 60×36dp，任何遮罩（圆/圆角/方角/squircle）都不会截到槽端头与气泡尾。
+     单色层在 mipmap-anydpi-v33/ic_launcher.xml（<monochrome> 是 API 33 的元素，不放进 v26 这份）。 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sopho-pi · 设置</title>
+  <link rel="icon" type="image/svg+xml" href="/brand/sopho-app-icon-a4.svg">
+  <link rel="stylesheet" href="/settings.css">
+</head>
+<body>
+  <main class="settings-page">
+    <header>
+      <a href="/" class="settings-back">← 会话树</a>
+      <h1>设置</h1>
+      <p class="settings-lede">
+        这一页放的是 <strong>服务端保存</strong> 的网页设置（跟人走：换浏览器、换机器都读到同一份）。
+        现在有四项 —— 思考块的 <strong>默认</strong> 折叠方式、卡片反馈的 <strong>维护者会话</strong>、
+        对话内 <strong>推荐回复</strong> 的总开关，以及 <strong>压缩即封存</strong> 的自动触发。
+        会话页左栏底栏那条「设置」开的是<strong>同一批</strong>设置的浮层（同一对 <code>GET/PATCH /settings</code>、同一份侧车）。
+      </p>
+    </header>
+
+    <section class="settings-card" aria-labelledby="settings-fold-title">
+      <h2 id="settings-fold-title">思考折叠</h2>
+      <p class="settings-hint">
+        新渲染的思考块默认是展开还是收起。你在某一个会话里 <strong>手动</strong> 点过的展开/收起仍然优先
+        （那一条按会话记在这个浏览器里，不会被这里的全局默认覆盖）。
+      </p>
+      <div class="settings-field" id="settings-fold" role="radiogroup" aria-labelledby="settings-fold-title">
+        <label class="settings-option">
+          <input type="radio" name="thinking-default-fold" value="expanded" disabled>
+          <span>默认展开<small>与 pi TUI 的默认一致（思考默认可见）</small></span>
+        </label>
+        <label class="settings-option">
+          <input type="radio" name="thinking-default-fold" value="collapsed" disabled>
+          <span>默认收起<small>思考块默认折起，点一下才看</small></span>
+        </label>
+      </div>
+      <p class="settings-state" id="settings-state" role="status" aria-live="polite">正在读取…</p>
+    </section>
+
+    <section class="settings-card" aria-labelledby="settings-notify-title">
+      <h2 id="settings-notify-title">卡片反馈的维护者会话</h2>
+      <p class="settings-hint">
+        网页上每张消息卡 / 工具结果卡右下角都能标注一条反馈（<code>POST /annotations</code>）。
+        新反馈到达时，服务端会通知这里填的那条会话：给它发一条说明「哪几条、什么锚点、该做什么」的消息
+        并<strong>把它叫起来</strong>（空闲也收得到）。<strong>留空 = 不通知</strong> —— 退回现状：
+        维护者自己去读 <code>GET /annotations?state=open</code>（或直接读 <code>$ASSIST_HOME/annotations.jsonl</code>）。
+      </p>
+      <div class="settings-field" id="settings-notify">
+        <input id="settings-notify-input" class="settings-input" type="text" spellcheck="false" autocomplete="off"
+               placeholder="完整 uuid；留空 = 不通知" disabled>
+        <div class="settings-actions">
+          <button id="settings-notify-save" class="settings-button" type="button" disabled>保存</button>
+        </div>
+        <p class="settings-hint">
+          只收<strong>完整 uuid</strong>（前缀不收；填的不是会话也不报错 —— 服务端只会如实记一条日志、不通知）。
+        </p>
+      </div>
+      <p class="settings-state" id="settings-notify-state" role="status" aria-live="polite">正在读取…</p>
+    </section>
+
+    <section class="settings-card" aria-labelledby="settings-suggestions-title">
+      <h2 id="settings-suggestions-title">对话内的推荐回复</h2>
+      <p class="settings-hint">
+        每个回合<strong>结束之后</strong>另起一次模型调用，在输入框上方给 ≤3 条「下一句」候选，
+        <strong>点一下就直发出去</strong>（与打字完全同一条投递路）。生成不阻塞回合（后台跑），失败/超时就安静地不作声；
+        模型觉得没意义时会给空数组 —— 那就一排候选都不出。
+        <strong>关掉 = 一次模型调用都不发</strong>。
+      </p>
+      <div class="settings-field">
+        <label class="settings-option">
+          <input id="settings-suggestions-enabled" type="checkbox" data-slot="off" disabled>
+          <span>启用<small>默认开启；每回合结束后生成一次</small></span>
+        </label>
+      </div>
+      <p class="settings-state" id="settings-suggestions-state" role="status" aria-live="polite">正在读取…</p>
+    </section>
+
+    <section class="settings-card" aria-labelledby="settings-seal-title">
+      <h2 id="settings-seal-title">压缩即封存</h2>
+      <p class="settings-hint">
+        压缩回合<strong>落定之后</strong>、且没有任何 runtime 拿着它时，自动把会话文件裁成「摘要 ＋ 保留段 ＋ 尾段」，
+        被裁掉的那一段另起一个新 id 归档。<strong>关掉 = 不再自动做</strong>
+        （显式封存（<code>POST /sessions/{id}/seal</code>）仍然可用）。
+      </p>
+      <div class="settings-field">
+        <label class="settings-option">
+          <input id="settings-seal-auto" type="checkbox" data-slot="off" disabled>
+          <span>自动封存<small>默认开启（业主 2026-09-22 批的默认）；关掉只是不再自动做</small></span>
+        </label>
+      </div>
+      <p class="settings-state" id="settings-seal-state" role="status" aria-live="polite">正在读取…</p>
+    </section>
+
+    <p class="settings-foot">
+      设置由服务端保存并校验：未知的键或非法的值会被 <strong>拒绝</strong>（不是一个字都不说就忽略）。
+    </p>
+  </main>
+  <script type="module" src="/settings.js"></script>
+</body>
+</html>

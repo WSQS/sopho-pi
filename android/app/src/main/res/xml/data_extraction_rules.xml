@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ 的备份规则：允许备份的只有「非身份的界面偏好」。
+  libzt 的 identity（identity.secret / identity.public）落在 filesDir/zerotier —— 这里整体排除 files 目录，
+  与 allowBackup="false" 一道，确保它不进自动备份（两台设备同身份会撞 NODE_IDENTITY_COLLISION）。
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="." />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="." />
+        <exclude domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

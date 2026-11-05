@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sopho-pi · 会话</title>
+  <!-- 标签页图标：**唯一母版** `web/brand/sopho-app-icon-a4.svg`（A4「几何状态槽＋对话气泡」，深底 #0f1013 ＋
+       青绿 #8abeb7；手机端启动图标用的是同一份几何，见 android/app/src/main/res/drawable/ic_launcher_foreground.xml）。
+       只给 SVG 一种格式：浏览器自己解码（Chromium 129 实测会真的去取这一份，见 docs/ops/sopho-app-icon-a4.md）。
+       静态服务对 `web/` 一律 `cache-control: no-store`（server/app.mjs），所以换图后刷新就是新的，不用加版本号。 -->
+  <link rel="icon" type="image/svg+xml" href="/brand/sopho-app-icon-a4.svg">
+  <!-- 设计值层（**生成物**，不是手写 CSS）：规格文档 spec/screens/settings-overlay.md 的「几何表」是那几个数
+       的唯一人类来源，bin/gen-design-values.mjs 把它生成成这一份 `--design-*`；下面那几处声明从它取值
+       （`var(--design-…, <原来的字面量>)`）—— 生成物拿不到时降级成原来的字面量（与铺这一层之前逐字相同）。
+       重跑：`npm run gen:designvalues`；手改生成物会在 `npm run test:designspec` 里被逐字节比出来。 -->
+  <link rel="stylesheet" href="/generated/design-values.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "PingFang SC", "Microsoft YaHei", monospace;
+      --bg: #0f1013;
+      --panel: #121318;
+      --raised: #16171c;
+      --line: #292b31;
+      --muted: #7c7f8a;
+      --text: #c7c9cf;
+      --bright: #e3e8e4;
+      --accent: #8abeb7;
+      --danger: #e06868;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; height: 100vh; display: grid; grid-template-columns: minmax(14rem, 19rem) minmax(0, 1fr); background: var(--bg); color: var(--muted); font-size: 13px; }
+    button, input, textarea { font: inherit; }
+    button, input, textarea { border: 1px solid var(--line); border-radius: 2px; background: var(--panel); color: var(--text); }
+    button { cursor: pointer; }
+    button:hover:not(:disabled) { color: var(--bright); border-color: #4a4d56; }
+    button:disabled, textarea:disabled { cursor: default; opacity: .45; }
+    [hidden] { display: none !important; }
+
+    aside.tree { min-width: 0; min-height: 0; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; border-right: 1px solid var(--line); background: #101115; }
+    .tree-nav { min-width: 0; display: flex; align-items: center; gap: .15rem; height: 32px; padding: 0 .45rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .tree-nav h1 { margin: 0; font-size: 13px; font-weight: 600; color: var(--bright); }
+    .tree-nav a, .tree-nav button { padding: .18rem .3rem; border: 0; background: transparent; color: var(--muted); text-decoration: none; }
+    /* M-18：左栏搜索 + 只看命名（纯前端过滤，不请求服务端、不改 /tree）。 */
+    .tree-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem; padding: .3rem .45rem; border-bottom: 1px solid var(--line); background: var(--panel); }
+    .tree-search input { min-width: 0; min-height: 26px; padding: .22rem .38rem; }
+    #tree-named-only { min-height: 26px; padding: .22rem .38rem; white-space: nowrap; }
+    #tree-named-only[aria-pressed="true"] { color: var(--bright); }
+
+    .new-session { display: grid; gap: .32rem; padding: .42rem .45rem; border-bottom: 1px solid var(--line); background: var(--panel); }
+    .new-session-label { color: var(--text); font-size: 12px; }
+    .new-session-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; }
+    .new-session button, .new-session input { min-width: 0; min-height: 26px; padding: .22rem .38rem; }
+    .advanced-session { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem; margin: 0; padding: 0; border: 0; }
+    .new-session-footer { display: flex; justify-content: flex-end; }
+    #new-session-cancel { border: 0; background: transparent; color: var(--muted); }
+
+    .device-panel { margin: 0 .45rem .35rem; padding: .35rem 0; border-bottom: 1px solid var(--line); }
+    .device-panel h2 { margin: 0 0 .25rem; color: var(--text); font-size: 12px; }
+    #devices { display: grid; gap: .2rem; font-size: 11px; }
+    .device { padding: .22rem .3rem; border: 1px solid var(--line); }
+    .device-ok { color: #7bc47f; }
+    .device-failed { color: #e06868; }
+
+    /* 会话列表容器：**左内边距 = 0** —— 每一行（连同它最左那条 3px 状态槽）铺满左栏内容区的
+       最左那一条。原样是 `padding: .2rem .3rem`：那条左内边距把整棵树往右推了 0.3rem = 4.8px，
+       于是每一条会话行的左边缘都落在 4.8px 处、左边留出一条空隙。业主 2026-09-25（逐字）：
+       「对照目前的设计页面我和我们实际上的真实页面，可以看到，我们的左侧栏当中的会话栏左侧还是有一个空隙，
+       请你去除它，使其铺满一行，除了缩进行的情况」。
+       **缩进不在这条链上**：`web/render.js` 给每条行写 `margin-inline-start = depth × .65rem`，
+       所以缩进行靠自己往右挪，级差一字不变 —— 门 `npm run test:treeflush` 钉的三条就是
+       「非缩进行贴最左 / 缩进行仍然缩进 / 状态槽仍在本行最左」。
+       右内边距**保留**：业主说的是左侧那一条，不顺手改别的。 */
+    #tree { min-height: 0; overflow: hidden; padding: .2rem .3rem .2rem 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 0; }
+    #tree[data-attic-open="true"] { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+    .active-tree-list, .attic-list { min-height: 0; overflow: auto; display: grid; align-content: start; gap: 0; }
+    .tree-session { width: auto; height: var(--design-tree-session-height, 26px); min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; border: 0; border-bottom: 1px solid #1e2025; background: transparent; color: var(--muted); }
+    .tree-session.has-fold { grid-template-columns: 2rem minmax(0, 1fr); }
+    .tree-session:hover { background: var(--raised); color: var(--text); }
+    .tree-session.status-working { color: #a8bbb7; }
+    .tree-session.unread { color: var(--bright); }
+    .tree-session.archived { opacity: .62; }
+    .fold-toggle { min-width: 0; padding: 0 .15rem; border: 0; border-right: 1px solid #23252a; border-radius: 0; background: transparent; color: #666a73; font-size: 11px; }
+    .fold-toggle:hover, .fold-toggle.open { color: var(--accent); }
+    .tree-select { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .35rem; padding: 0 .35rem 0 0; border: 0; border-radius: 0; background: transparent; color: inherit; text-align: left; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4d5058; }
+    .status-working .status-dot { background: #7bc47f; }
+    .status-unread .status-dot, .tree-session.unread .status-dot { background: #d65d5d; }
+    .tree-label { min-width: 0; display: flex; align-items: center; gap: .35rem; line-height: 25px; }
+    .tree-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-delegation { flex: 0 0 auto; color: #686b74; font-size: 11px; white-space: nowrap; }
+    .status-working .tree-delegation { color: #8fa39f; }
+    .tree-time { color: #686b74; white-space: nowrap; font-size: 11px; }
+    .tree-empty { margin: .4rem; color: var(--muted); }
+    .attic { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0; margin-top: .25rem; }
+    #tree[data-attic-open="true"] .attic { margin-top: 0; }
+    .attic-toggle { width: 100%; height: 26px; padding: 0 .4rem; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: var(--raised); color: var(--text); text-align: left; font-size: 12px; }
+    .attic-list { padding: .15rem; border: 1px solid var(--line); background: #111216; }
+    .attic-heading { padding: .12rem .25rem; color: #666a73; font-size: 11px; }
+    /* 底栏（UI Style：左栏的「底栏」置底）：连接状态 + 设置入口同占这一条 28px 的栏。
+       入口是纯 `<a href>`（同标签页导航）—— 不新增任何 JS，也不动 `#tree-connection` 的文本
+       （那条状态行由 `test/s1a2-v21-style.mjs` 逐字钉着）。 */
+    .tree-footer { min-width: 0; display: flex; align-items: stretch; background: var(--panel); }
+    .tree-connection { flex: 1 1 auto; min-width: 0; height: 28px; padding: 0 .55rem; display: flex; align-items: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-top: 1px solid var(--line); color: #666a73; font-size: 11px; }
+    .tree-connection.connected { color: #8fa39f; }
+    /* 低对比，与邻座导航控件（`.tree-nav button`）同一档：`var(--muted)` + 悬停提亮。
+       `border-top` 与状态行各画一半 —— 两个成员是横向相接的，看上去仍是一条线；
+       这样底栏仍是**恰好 28px**（与改动前逐像素同高）。 */
+    .tree-settings { flex: 0 0 auto; height: 28px; padding: 0 .55rem; display: flex; align-items: center; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--muted); text-decoration: none; font-size: 11px; white-space: nowrap; }
+    .tree-settings:hover { color: var(--bright); }
+    /* 开着的时候这条入口是**激活态**（`aria-expanded` 是状态源，不是另加一个类）：亮字 + 浅底。 */
+    .tree-settings[aria-expanded="true"] { color: var(--bright); background: var(--raised); }
+
+    /* ── 设置浮层（业主 2026-09-22：「我希望设置是一个悬浮窗，而不是打开一个新窗口」）──────────────
+       形状：半透明遮罩 + **居中模态框**（约 560px、圆角、右上一个 ×），内容与独立页 `/settings.html`
+       同两项（同一对 `GET/PATCH /settings`）。
+       ⚠️ 三条硬约束（`test:slot` 会机械量全页）：**不许** box-shadow、**不许** 渐变、过渡/动画 ≤150ms。
+       所以浮层的层次只靠 `rgba` 遮罩 + 边框 + 圆角表达；`prefers-reduced-motion: reduce` 下**完全不动**。 */
+    .settings-overlay { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: auto; background: rgba(6, 7, 9, .62); }
+    .settings-panel { width: min(var(--design-settings-panel-width, 560px), 100%); max-height: 100%; overflow: auto; display: grid; gap: var(--design-settings-panel-gap, .5rem); padding: .8rem .85rem .85rem; border: 1px solid #4a4d56; border-radius: 6px; background: var(--panel); color: var(--text); }
+    .settings-panel:focus { outline: none; }
+    .settings-panel-head { display: flex; align-items: center; gap: .45rem; padding-bottom: .4rem; border-bottom: 1px solid var(--line); }
+    .settings-panel-head h2 { flex: 1 1 auto; margin: 0; font-size: 14px; font-weight: 600; color: var(--bright); }
+    #settings-panel-close { flex: none; width: 1.5rem; height: 1.5rem; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    #settings-panel-close:hover { color: var(--bright); }
+    .settings-panel-lede, .settings-panel-hint { margin: 0; line-height: 1.6; font-size: 12px; }
+    .settings-panel-foot { margin: 0; display: flex; align-items: center; gap: .5rem; line-height: 1.6; font-size: 12px; }
+    .settings-panel-foot-text { min-width: 0; flex: 1 1 auto; }
+    .settings-panel-card { display: grid; gap: .38rem; padding: .45rem .5rem .5rem; border: 1px solid var(--line); border-radius: 2px; background: var(--raised); }
+    .settings-panel-card h3 { margin: 0; font-size: 12px; font-weight: 600; color: var(--bright); }
+    .settings-panel-field { display: grid; gap: .3rem; }
+    .settings-panel-option { display: flex; align-items: flex-start; gap: .4rem; padding: .3rem .38rem; border: 1px solid var(--line); border-radius: 2px; background: var(--panel); cursor: pointer; }
+    .settings-panel-option:hover { border-color: #4a4d56; }
+    .settings-panel-option input { margin: .15rem 0 0; accent-color: var(--accent); }
+    .settings-panel-option span { display: grid; gap: .1rem; color: var(--text); }
+    .settings-panel-option small { color: var(--muted); }
+    .settings-panel-option:has(input:checked) { border-color: var(--accent); }
+    .settings-panel-input { width: 100%; padding: .3rem .38rem; }
+    .settings-panel-actions { display: flex; gap: .35rem; }
+    .settings-panel-button { padding: .26rem .6rem; }
+    /* 重试按钮不参压缩（同 `test:wrap-sweep` 那条课：`flex: none` + nowrap，否则窄宽下会逐字断行）。 */
+    #settings-panel-retry { flex: 0 0 auto; white-space: nowrap; }
+    /* `min-width: 0` ＋ `overflow-wrap: anywhere`：状态行会原样回显**服务端的错误人话**，那里可能带一段
+       无断点的长 token（真形状：真侧车坏掉时 500 的 message 是 `<file> is invalid: …: "<长值>"`，见
+       `server/ui-settings.mjs` 的 `UiSettingsFileError`）——没有这两条，那一段会把 `.settings-panel` 的隐式 `auto`
+       轨道顶到 token 宽度（实测 541 → 1661，面板横向滚 1120px、子树 36 个元素出界、× 关闭键被推到面板右边界外）。
+       断在 min-content 源头这一层（与 `.question-options` 同一把尺子）；两条都要：只 `min-width:0` 会让文字
+       溢出自己的盒子（实测状态行 scrollWidth 1591 / clientWidth 496），只 `overflow-wrap` 则 computed min-width 还是 auto。 */
+    .settings-panel-state { margin: 0; min-height: 1rem; line-height: 1.6; font-size: 12px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+    .settings-panel-state[data-kind="error"] { color: var(--danger); }
+    .settings-panel-state[data-kind="ok"] { color: var(--accent); }
+    .settings-overlay[data-state="open"] { animation: settings-overlay-in 120ms ease-out; }
+    .settings-overlay[data-state="open"] .settings-panel { animation: settings-panel-in 120ms ease-out; }
+    @keyframes settings-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes settings-panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .settings-overlay[data-state="open"], .settings-overlay[data-state="open"] .settings-panel { animation: none; }
+    }
+
+    main { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; background: var(--bg); }
+    /* P1（manager toolkit）：右栏有两个视图（会话 / 问题），它们**同占第 2 行**（重叠，不各占一行）。
+       切页只切 visibility，不用 display:none —— 后者会把 #messages 的 scrollTop 归零，
+       「切回保留正文滚动位置」就没了；visibility 保留布局，几何与滚动位置都不动。
+       底栏（composer + 排队条）在问题页隐藏、切回恢复（答题在条目内联）。
+       M-41：扩展通知行（`#session-notice`）单独占第 3 行，**两个视图都不隐藏** ——
+       它是插件 notify 的唯一落点，切到问题页也必须照常可见（否则又回到「静默」）。
+       ⚠️ 五个直接子项都**显式**写在同一条列上：两个视图要重叠，只写 grid-row 的话
+       auto-placement 会把它们排进两列（实测把正文区挤成半宽）。 */
+    main > header { grid-area: 1 / 1; }
+    .messages-pane { grid-area: 2 / 1; position: relative; min-width: 0; min-height: 0; }
+    #questions-pane { grid-area: 2 / 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); }
+    #session-notice { grid-area: 3 / 1; }
+    #queue-status { grid-area: 4 / 1; }
+    #composer { grid-area: 5 / 1; }
+    main[data-view="questions"] .messages-pane { visibility: hidden; }
+    main[data-view="questions"] #composer,
+    main[data-view="questions"] #queue-status { display: none; }
+    /* 标注页（`docs/history/design-annotations.md` §1/§3）：与问题页**同占第 2 行**（重叠，不各占一行），
+       它是**全局**只读列表（跨会话） —— 切换器上那个页签始终可用。 */
+    #annotations-pane { grid-area: 2 / 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); }
+    main[data-view="annotations"] .messages-pane { visibility: hidden; }
+    main[data-view="annotations"] #composer,
+    main[data-view="annotations"] #queue-status { display: none; }
+    header { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .2rem .75rem; align-items: center; min-height: var(--design-header-min-height, 54px); padding: .55rem .75rem; border-bottom: 1px solid var(--line); background: #101115; }
+    /* 视图切换（业主 2026-09-20 定的入口位置）：顶栏右侧两个页签式按钮，26px 单行；
+       未答数**并入** `问题` 这一个页签（不另设角标）。 */
+    #view-tabs { display: flex; align-items: center; gap: .25rem; }
+    #view-tabs button { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #view-tabs button[aria-selected="true"] { background: var(--raised); color: var(--bright); }
+
+    /* 问题页（`docs/plans/manager-toolkit-plan.md` §5）：工具栏 26px 单行 + 列表（自己滚）+ 一条 notice 行
+       （底栏在问题页是隐藏的 ⇒ 答题失败/回执必须有自己的可见落点）。 */
+    #questions-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .3rem; height: 26px; padding: 0 .5rem; border-bottom: 1px solid var(--line); background: #101115; }
+    #questions-filters { display: flex; align-items: center; gap: .25rem; min-width: 0; }
+    #questions-filters button { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #questions-filters button[aria-selected="true"] { background: var(--raised); color: var(--bright); }
+    #questions-refresh { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #questions-list { min-height: 0; overflow: auto; padding: .75rem; display: grid; align-content: start; gap: .55rem; }
+    #questions-notice { min-height: 1rem; padding: 0 .75rem .45rem; color: #7f9baf; font-size: 11px; overflow-wrap: anywhere; }
+    #questions-notice[data-level="error"] { color: var(--danger); }
+    /* 标注页：与问题页同一套外形（工具栏 26px 单行 + 列表自己滚 + 一条 notice 行）。 */
+    #annotations-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .3rem; height: 26px; padding: 0 .5rem; border-bottom: 1px solid var(--line); background: #101115; }
+    #annotations-filters { display: flex; align-items: center; gap: .25rem; min-width: 0; }
+    #annotations-filters button { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #annotations-filters button[aria-selected="true"] { background: var(--raised); color: var(--bright); }
+    #annotations-refresh { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #annotations-list { min-height: 0; overflow: auto; padding: .75rem; display: grid; align-content: start; gap: .55rem; }
+    #annotations-notice { min-height: 1rem; padding: 0 .75rem .45rem; color: #7f9baf; font-size: 11px; overflow-wrap: anywhere; }
+    #annotations-notice[data-level="error"] { color: var(--danger); }
+    .annotation-item { display: grid; gap: .4rem; padding: .55rem .65rem; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+    .annotation-head { display: flex; flex-wrap: wrap; gap: .45rem; align-items: baseline; color: #696c75; font-size: 11px; }
+    .annotation-kind { padding: 0 .25rem; border: 1px solid var(--line); color: #9a9da6; }
+    .annotation-state { padding: 0 .25rem; border: 1px solid #8c7440; color: #c9a74e; }
+    .annotation-state[data-state="done"] { border-color: #4c7a52; color: #7bc47f; }
+    .annotation-session, .annotation-time { color: #696c75; }
+    .annotation-note { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .annotation-excerpt { color: #777b85; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .annotation-empty { display: grid; gap: .4rem; justify-items: start; color: var(--muted); }
+    .annotation-empty p { margin: 0; }
+    /* 调试页（业主 2026-09-22 裁定：右栏第四个页签，与 会话/问题/标注 同级）：与问题页/标注页**同形**
+       （工具栏 26px 单行 + 列表自己滚 + 一条 notice 行）。它是**全局**只读页（跨会话），切换器上始终可用。
+       行内不新造外观：`.debug-item` 逐条抄 `.annotation-item`（1px 边 + panel 底），键值两列是同一套
+       「标签 + 值」口径。值取不到时**如实写「这一项取不到」**（不许填 0、不许留空、不许编）。 */
+    #debug-pane { grid-area: 2 / 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); }
+    main[data-view="debug"] .messages-pane { visibility: hidden; }
+    main[data-view="debug"] #composer,
+    main[data-view="debug"] #queue-status { display: none; }
+    #debug-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .3rem; height: 26px; padding: 0 .5rem; border-bottom: 1px solid var(--line); background: #101115; }
+    #debug-scope { min-width: 0; color: #696c75; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #debug-refresh { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #debug-list { min-height: 0; overflow: auto; padding: .75rem; display: grid; align-content: start; gap: .55rem; }
+    #debug-notice { min-height: 1rem; padding: 0 .75rem .45rem; color: #7f9baf; font-size: 11px; overflow-wrap: anywhere; }
+    #debug-notice[data-level="error"] { color: var(--danger); }
+    .debug-item { display: grid; gap: .4rem; padding: .55rem .65rem; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+    .debug-head { display: flex; flex-wrap: wrap; gap: .45rem; align-items: baseline; color: #696c75; font-size: 11px; }
+    .debug-title { flex: none; max-width: 100%; padding: 0 .25rem; border: 1px solid var(--line); color: #9a9da6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .debug-source { min-width: 0; color: #696c75; font-size: 11px; overflow-wrap: anywhere; }
+    .debug-rows { display: grid; gap: .2rem; min-width: 0; }
+    .debug-row { display: grid; grid-template-columns: minmax(6rem, 12rem) minmax(0, 1fr); gap: .45rem; align-items: baseline; min-width: 0; }
+    .debug-key { min-width: 0; color: #696c75; font-size: 11px; overflow-wrap: anywhere; }
+    .debug-value { min-width: 0; font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
+    .debug-value[data-missing="true"] { color: #c9a74e; }
+    .debug-empty { display: grid; gap: .4rem; justify-items: start; color: var(--muted); }
+    .debug-empty p { margin: 0; }
+    /* 卡片级反馈控件（`docs/history/design-annotations.md` §3）：默认低对比、hover/focus 才明显；
+       贴在卡片**右下角**——用**绝对定位**，不给卡片加高度（加高度会把正文/图片的整体高度变高，
+       `loading=lazy` 的图片会因视口距离变化而不在打开时加载，见 `test/tui-message-images.mjs`）。
+       它**不是**消息内容，绝不进 `.message-body` / `.tool-output`。 */
+    .message, .tool-card, .bash-card { position: relative; }
+    .annotate { position: absolute; right: .35rem; bottom: .25rem; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; }
+    .annotate-button { width: 22px; height: 22px; padding: 0; border: 1px solid transparent; background: transparent; color: #555862; font-size: 13px; line-height: 1; cursor: pointer; }
+    .annotate-button:hover, .annotate-button:focus-visible { color: var(--bright); border-color: var(--line); background: var(--raised); }
+    .annotate-form { width: min(380px, calc(100vw - 2rem)); display: grid; gap: .3rem; padding: .35rem; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 2px 10px #000a; z-index: 6; }
+    .annotate-note { width: 100%; box-sizing: border-box; min-height: 26px; padding: .28rem .4rem; border: 1px solid var(--line); background: #0b0c0f; color: var(--text); font: inherit; resize: vertical; }
+    .annotate-actions { display: flex; justify-content: flex-end; gap: .3rem; }
+    .annotate-actions button { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    .annotate-status { color: var(--muted); font-size: 11px; }
+    .annotate-done { color: #7bc47f; font-size: 11px; background: var(--panel); }
+    /* M-41：插件 notify 的落点（瞬时通知行）—— 26px 单行起步、多行 pre-wrap 原样长高；
+       左侧 3px 槽按 level 上色（`web/slot.css`）。它**不是**消息：绝不进 `#messages`。 */
+    #session-notice { display: flex; align-items: flex-start; gap: .4rem; min-height: 26px; padding: .1rem .75rem .1rem 0; border-top: 1px solid var(--line); background: #101115; color: #7f9baf; font-size: 12px; }
+    #session-notice[data-level="warning"] { color: var(--slot-warning); }
+    #session-notice[data-level="error"] { color: var(--danger); }
+    #session-notice-text { flex: 1; min-width: 0; padding: .3rem 0 .3rem .7rem; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+    #session-notice-close { flex: none; width: 26px; height: 26px; margin-top: .05rem; padding: 0; border: 1px solid var(--line); background: transparent; color: var(--muted); line-height: 1; }
+    #session-notice-close:hover { color: var(--bright); border-color: #4a4d56; }
+    .question-item { display: grid; gap: .4rem; padding: .55rem .65rem; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+    .question-item[data-busy="true"] { opacity: .7; }
+    /* 问题自带的事实（「背景」）：画在题面之上，多行原样（pre-wrap），不许折行/截断/上 thinking。 */
+    .question-context { display: flex; gap: .35rem; align-items: baseline; font-size: 12px; color: #9a9da6; }
+    .question-context-label { flex: none; color: #696c75; }
+    .question-context-body { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .question-context-none { color: #696c75; }
+    .question-head { display: flex; gap: .5rem; align-items: baseline; }
+    .question-priority { flex: none; padding: 0 .25rem; border: 1px solid #8c7440; color: #c9a74e; font-size: 10px; }
+    .question-text { min-width: 0; overflow-wrap: anywhere; }
+    .question-meta { color: #696c75; font-size: 11px; overflow-wrap: anywhere; }
+    /* `min-width: 0`（长无断点 token 撑宽的真凶所在）：候选按钮是 `white-space: nowrap`，它的 min-content
+       就是整条 token；`.question-options` 作为 grid 项若用默认的 `min-width: auto`，这条 min-content 会逐级
+       传上去 ⇒ `#questions-list` 的隐式 `auto` 轨道被撑到 ~1810px（列表内部横向滚 ≈942px，等于右栏被顶宽）。
+       归零后轨道被拉回容器宽度，按钮由自己的 `max-width:100%` + `overflow:hidden` 正常省略号截断。
+       注意：把 `min-width:0` 加在 `.question-item` 上**不够**（实测轨道仍 1838）—— 必须断在 min-content 源头这一层。 */
+    .question-options { display: flex; flex-wrap: wrap; gap: .25rem; min-width: 0; }
+    .question-options button { height: 26px; max-width: 100%; padding: 0 .45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .question-answer-row, .question-close-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .3rem; align-items: center; }
+    .question-answer-row input, .question-close-row input, .question-answer-row textarea, .question-close-row textarea { min-width: 0; height: 26px; padding: 0 .38rem; }
+    /* 手动回答框与「关闭原因」框都是多行控件（`web/render.js` 建的是 `<textarea rows=1>`）：全局 `textarea`
+       那条（min-height 3.5rem / padding .55rem / line-height 1.4 / overflow-y hidden）是照着底栏 composer
+       写的，会把这里撑成两行 ⇒ 钉回 26px 的单行基调。**高由一小段 JS 随内容长高**（`autoGrowField`，
+       `web/app.js`），上限就是这个 `max-height`（**5 行**：24px 行高 × 5 ＋ 2px 边框 = 122px）——
+       到顶不再长，改由框内滚动（`overflow-y: auto`）。
+       为什么不用 CSS `field-sizing: content`：Chromium 新版本支持，但 Firefox 里**静默不生效**（退化成
+       固定高、不报错）—— 本仓还跑 Firefox 相关分支，会拿到「以为长了、其实没长」的假象；`scrollHeight`
+       + clamp 是两条引擎共有的标准 API（不赌新特性）。为什么这里仍写着 `height: 26px`：JS 没跑（或那段被摘掉）时退化回改前那个固定单行框，不是崩。 */
+    .question-answer-row textarea, .question-close-row textarea { min-height: 26px; max-height: 122px; line-height: 24px; overflow-y: auto; resize: none; white-space: pre-wrap; }
+    .question-answer-row button, .question-close-row button { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    /* 答案原样（`pre-wrap`）：答完之后那一行是「回答：第一行⏎第二行」—— **真的两行**。
+       业主 2026-10-05 要的是「能换行」；换行插进去了却在这里被白空间折回一行，等于没换。 */
+    .question-trail { color: #9a9da6; font-size: 12px; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .question-empty { display: grid; gap: .4rem; justify-items: start; color: var(--muted); }
+    .question-empty p { margin: 0; }
+    #session-title { margin: 0; overflow: hidden; text-overflow: ellipsis; color: var(--bright); font-size: 14px; white-space: nowrap; }
+    .session-actions { min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; }
+    #archive, #rename, #delete { height: 26px; padding: 0 .5rem; white-space: nowrap; }
+    #export { display: inline-flex; align-items: center; height: 26px; padding: 0 .5rem; color: var(--muted); text-decoration: none; white-space: nowrap; }
+    #rename-form { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .35rem; align-items: center; padding: .32rem .4rem; border: 1px solid var(--line); background: var(--panel); }
+    #session-title-input { min-width: 0; min-height: 26px; padding: .22rem .38rem; }
+    #rename-form button { padding: .24rem .45rem; white-space: nowrap; }
+    #compact, #abort { padding: .28rem .5rem; }
+    #compact[data-busy="true"] { color: #d8b45a; }
+    /* 观测行：与 #session-cwd / #session-context 同一条规矩 —— 26px、nowrap、溢出省略号。
+       「扁平化：所有行都很重要，除必要情况绝不换行」⇒ 这一行宁可截断也不换第二行；
+       短屏看不到的尾巴仍是完整文本（title / 复制 DOM 全在），只是视觉被 ellipsis 截掉。 */
+    #session-usage { grid-column: 1 / -1; min-width: 0; height: 26px; line-height: 26px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #696c75; font-size: 11px; }
+    /* M-22 / M-23：单行 26px，窄屏按 CSS 省略号截断（cwd 另做头部省略保叶子目录可见）。
+       M-23 的阈值配色只取 slot.css 既有 token（>70% 黄 / >90% 红），不新造调色板。 */
+    #session-cwd, #session-context { grid-column: 1 / -1; min-width: 0; height: 26px; line-height: 26px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #696c75; font-size: 11px; }
+    #session-context[data-level="warn"] { color: var(--slot-warning); }
+    #session-context[data-level="error"] { color: var(--slot-error); }
+    #session-connection { grid-column: 1 / -1; min-width: 0; height: 26px; padding: 0 .45rem; display: flex; align-items: center; overflow: hidden; color: var(--danger); font-size: 11px; white-space: nowrap; }
+    #session-connection.connected { color: var(--accent); }
+    #compact-confirm { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .35rem; align-items: center; padding: .4rem .45rem; border: 1px solid #66552d; background: #282318; color: #d8b45a; font-size: 12px; }
+    #compact-confirm button { padding: .24rem .45rem; white-space: nowrap; }
+    #compact-confirm-yes { color: var(--bright); }
+    /* M-18（删除会话的确认行）：与 `#compact-confirm` 同结构，只换成"破坏性"语义色（错误槽）。 */
+    #delete-confirm { --slot: var(--slot-error); grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .35rem; align-items: center; padding: .4rem .45rem; border: 1px solid #6b3a3a; background: #2a1719; color: var(--slot-error); font-size: 12px; }
+    #delete-confirm button { padding: .24rem .45rem; white-space: nowrap; }
+    #delete-confirm-yes { color: var(--bright); }
+    /* 「⏳ 排队中」条：它说的是**还没发出去的东西**，所以属于输入区而不属于顶栏 ——
+       贴在 composer 正上方（main 的第 3 行，顶栏仍是第 1 行），宽/窄屏都占满整行。
+       max-height 是硬上限：队列再长也不许把正文区挤到不能用，超出时它自己滚（保留 flex-wrap）。 */
+    #queue-status { display: flex; flex-wrap: wrap; gap: .25rem .7rem; max-height: 4.8rem; overflow-y: auto; padding: .35rem .45rem; border: 1px solid #66552d; background: #282318; color: #d8b45a; font-size: 12px; }
+    .queue-item { overflow-wrap: anywhere; }
+    #messages { width: 100%; height: 100%; min-height: 0; overflow: auto; padding: .75rem; display: block; overflow-anchor: none; }
+    #jump { display: none; position: absolute; right: .75rem; bottom: .75rem; z-index: 2; padding: .3rem .65rem; background: var(--raised); color: var(--text); }
+    #jump.show { display: block; }
+    /* 正文容器用 block 而不是 flex column：content-visibility:auto 的 contain-intrinsic-size
+       在 flex 子项上不生效（子项会被压成 padding 高），用 block + margin 保留原来的 0.55rem 间距。 */
+    .message, .extra-message, .compaction-note { width: 100%; min-width: 0; border-radius: 2px; padding: .55rem .65rem; overflow-wrap: anywhere; margin: 0 0 .55rem; }
+    /* 大会话首开：屏幕外的消息不参与布局与绘制（原生惰性）。只在渐进渲染的大会话上开启，
+       否则一次性插入上千条会有 2 秒级的全量重排长任务。contain-intrinsic-size 用估计高度占位，
+       滚动条不跳；auto 会记住之前真的渲染过的高度。小会话不开，几何语义不变。 */
+    #messages[data-virtual="true"] .message,
+    #messages[data-virtual="true"] .extra-message,
+    #messages[data-virtual="true"] .compaction-note,
+    #messages[data-virtual="true"] .tool-card,
+    #messages[data-virtual="true"] .bash-card { content-visibility: auto; contain-intrinsic-size: 260px; }
+    /* 跨栏拖选的「选区护栏」（业主 2026-09-21 报的卡顿）：按住左键从正文拖到左边会话栏时，
+       `web/app.js` 的 pointermove 护栏给**已滚出正文可视区**的子节点标上 `data-sel-clamp="1"`。
+       为什么必须是 `hidden` 而不是 `auto`：`auto` 的元素一旦被 Range 覆盖就变成「对用户相关」
+       ⇒ 浏览器得把它的真实布局补出来（15 MB 夹具实测 0.75–0.9 s 主线程卡死），而 `hidden` 是
+       **无条件跳过**，既不进布局也不进选区 ⇒ Range 在容器边缘就被截断。松手/指针回到正文即撤，
+       `contain-intrinsic-size` 还在，`scrollHeight` 与 `scrollTop` 实测逐像素不变。 */
+    #messages[data-virtual="true"] [data-sel-clamp="1"] { content-visibility: hidden; }
+    .message { border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+    .message-user { background: #171b22; }
+    .message-role, .extra-label { margin-bottom: .3rem; color: #696c75; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+    .message-body p { margin: .3rem 0 .55rem; white-space: pre-wrap; }
+    .message-body h1, .message-body h2, .message-body h3, .message-body h4, .message-body h5, .message-body h6 { margin: .6rem 0 .3rem; color: var(--bright); }
+    .message-body blockquote { margin: .4rem 0; padding-left: .65rem; border-left: 2px solid #555862; color: #9a9da6; }
+    /* 正式消息的 markdown 现在由 marked 产出 <ul>/<ol>/<li>/<table>/<hr>（不再有 div.markdown-list-item）；
+       这几条只补密度，不引入新元素。高亮配色在 web/vendor/highlight-theme.css。 */
+    /* marked 每个块 token 后会补一个 `\n`（在 </p> 之外）。思考块祖先 `.message-thinking` 是 pre-wrap，
+       不重置的话那个 `\n` 会渲染成一条多余空行（实测让思考直播结束跳变 69px）。`.markdown` 根改成
+       默认空白处理：块间分隔符（结构）不再渲染成空行，段内软换行仍由 marked 的 `<br>` 表达。 */
+    .markdown { white-space: normal; }
+    .markdown ul, .markdown ol { margin: .3rem 0 .55rem; padding-left: 1.35rem; }
+    .markdown li { margin: .15rem 0; }
+    .markdown li > ul, .markdown li > ol { margin: .15rem 0; }
+    .markdown hr { border: 0; border-top: 1px solid var(--line); margin: .6rem 0; }
+    .markdown a { color: var(--accent); }
+    .markdown table { border-collapse: collapse; margin: .45rem 0; }
+    .markdown th, .markdown td { border: 1px solid var(--line); padding: .15rem .4rem; text-align: left; }
+    .markdown th { background: var(--raised); color: var(--bright); }
+    /* 退化路径（marked 未加载）：纯文本，保留旧渲染器的 pre-wrap 换行。 */
+    .markdown-plain { white-space: pre-wrap; }
+    /* markdown 正文里的图片：`web/markdown.mjs` 的 image renderer 产出的是**裸 `<img src=…>`**
+       （不是 `.message-image` 那个 `<figure>` 路，所以拿不到下面那条 `.message-image img` 的 `max-width`）
+       —— v2.2 从来没给它任何宽度约束。业主 2026-10-19 报的「消息卡超出了窗口」（标注 `an-3f3bad82`，
+       会话 `ee5cd6a9-…` 里一条 179 字图片行）就是它：缩略图按自身固有宽度（1024px 级）铺开，
+       把消息卡与 `#messages` 一起顶出横向滚动条（真 Chromium 实测 1200×760 溢出 183px / 420×820 溢出 651px）。
+       `max-width` **只压不放**：装得下的图仍按原尺寸画，只有装不下的才缩到列宽，图的比例由 `height:auto` 保持。
+       门：`test/long-message-overflow.mjs`（反证臂 `no-image-width`）。 */
+    .message-body img { max-width: 100%; height: auto; }
+    .message-body code { padding: .05rem .2rem; background: #0b0c0f; }
+    .code-block { margin: .45rem 0; padding: .55rem; overflow: auto; border: 1px solid var(--line); background: #0b0c0f; white-space: pre; }
+    .code-block code { padding: 0; background: transparent; }
+    .message-thinking { margin: .35rem 0; padding-left: .6rem; border-left: 2px solid #555862; color: #858892; font-style: italic; white-space: pre-wrap; }
+    /* I-22：「思考中…」只在这块真的什么都没得画时出现（思考/正文/工具都没有）。 */
+    .think { margin: .35rem 0; color: #858892; font-style: italic; }
+    .message-aborted { margin-top: .4rem; color: #d8b45a; }
+    .message-error { margin-top: .4rem; color: #e06868; }
+    /* 平铺（业主 2026-09-22）：工具块 / bash 块是 #messages 的**顶层块**，与消息块共用同一套底盘
+       （同宽、同边框、同圆角、同背景、同底距）—— 同一视觉家族，但类型靠自己的槽色 + 角标行区分。
+       工具块的状态底色仍由下面 `[data-state]` 那几条覆盖（它们特异性更高）。
+       ⚠️ 那几条**只**带底色：槽色一律由 `--slot-*` 表达（`web/slot.css` 里逐状态的
+       `--slot: var(--slot-*)` ＋ 那条 `!important` 槽原语）—— 这里原先还写着四条硬编码
+       `border-left-color`（#8abeb7 / #7bc47f / #e06868 / #d8b45a），2026-10-04 实测**从来没生效过**
+       （原语是 `!important`，非 important 的长写压不过它；把它们删掉，逐状态的计算色一个像素都不变），
+       已删 —— 与 `--dz-slots` 死 token 同一族。 */
+    .tool-card { margin: .4rem 0; padding: .45rem .55rem; width: 100%; min-width: 0; overflow-wrap: anywhere; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 2px; background: var(--panel); color: var(--text); }
+    /* 顶层块（不是嵌在别的块里的那只流血卡）按消息块的底距排，块间间隙一致。 */
+    #messages > .tool-card,
+    /* 流式期间也平铺（业主 2026-09-22）：`.live-message` 只是**包装节点**（`display: contents` ⇒
+       自身不产生盒子）、里面的块就是顶层块 ⇒ 与上面的顶层工具卡同一套底距。 */
+    .live-message > .tool-card { margin: 0 0 .55rem; }
+    /* bash 块（用户 `!` 命令）：同一套底盘，标题行是「命令行 + 折叠」，默认**展开**。 */
+    .bash-card { margin: 0 0 .55rem; padding: .55rem .65rem; width: 100%; min-width: 0; overflow-wrap: anywhere; border: 1px solid var(--line); border-left: 3px solid var(--slot-bash); border-radius: 2px; background: var(--panel); color: var(--text); }
+    .bash-head { display: flex; gap: .55rem; align-items: baseline; min-width: 0; }
+    .bash-command { min-width: 0; flex: 1; color: var(--bright); overflow-wrap: anywhere; }
+    .bash-output { margin: .35rem 0 0; max-height: 16rem; overflow: auto; color: #aaaeb7; white-space: pre-wrap; }
+    .message-body > .tool-card { width: calc(100% + 1.3rem + 4px); margin-inline: calc(-.65rem - 3px) calc(-.65rem - 1px); }
+    .tool-card[data-state="running"] { background-color: #282832; }
+    .tool-card[data-state="done-success"] { background-color: #283228; }
+    .tool-card[data-state="done-error"] { background-color: #3c2828; }
+    .tool-card[data-state="unfinished"], .tool-card[data-state="interrupted"] { background-color: #3a3225; }
+    /* 工具名**不参与压缩**：`overflow-wrap: anywhere`（`.message` 上继承下来）会把 flex 项的
+       `min-width:auto` 从「最宽单词」变成「一个字符」，于是 args 一长，name 就被挤到逐字换行
+       （实测 420px 下把当时的工具名 `spawn`（2026-09-26 已并入 `session_new`）挤成 5 行各 1 字）。args 才是该吸收收缩的那一项（它本来就能断长 token）。 */
+    .tool-call { display: flex; gap: .55rem; align-items: baseline; min-width: 0; }
+    .tool-name { flex: none; color: var(--bright); }
+    .tool-args { min-width: 0; color: #858892; font-size: 12px; overflow-wrap: anywhere; }
+    /* ── 命令全文（业主 2026-09-22 缺陷①：「bash 工具的命令是不是只有一行？展开时应该显示命令的
+       全部内容」）─────────────────────────────────────────────────────────────────────
+       折叠态**恰好一行**（26px 单行语言）：摘要 `nowrap + ellipsis`（撑不下就省略，全文在
+       展开/复制那条路上），标与两个按钮 `flex:none`，全文块 `flex-basis:100%` 另起一行。
+       ⚠️ 这条**只**加在带全文的命令卡上（`data-command-clip`）—— 别的 `.tool-args`（含
+       `test/wrap-sweep.mjs` / `test/text-wrap.mjs` 的夹具）一字未改：那里「摘要会随长 token 换行」
+       是登记在案的**现有**行为，本件不动它。 */
+    /* 用 `flex: 1 1 0`（**基准 0**、而不是 auto）：flexbox 的**折行是按假设主尺寸算的**，
+       基准写成 `auto` 时摘要的假设尺寸就是它的整段 nowrap 宽度（≈1500px）⇒ 它会把三个控件
+       挤到第二行（实测 37px）。基准 0 则先把四样排在一行、再让摘要吃掉剩余宽度 —— 控件与摘要在
+       同一行，全文块（`flex-basis:100%`）另外起一行。 */
+    .tool-args[data-command-clip="true"] { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45rem; }
+    .tool-args[data-command-clip="true"] .tool-args-summary { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tool-args[data-command-clip="true"] .tool-args-meta,
+    .tool-args[data-command-clip="true"] .tool-args-toggle,
+    .tool-args[data-command-clip="true"] .tool-copy { flex: none; }
+    .tool-args-meta { color: #6f737d; font-size: 11px; white-space: nowrap; }
+    .tool-args-toggle, .tool-copy { border: 0; background: transparent; color: #7c7f8a; font-size: 11px; font-style: normal; padding: 0; white-space: nowrap; }
+    .tool-args-toggle:hover, .tool-copy:hover { color: var(--bright); }
+    .tool-command { flex: 1 1 100%; margin: .35rem 0 0; padding: .35rem .45rem; max-height: 16rem; overflow: auto; background: #0b0c0f; color: #c9ccd3; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+    /* 必须显式写：作者样式里的 `display:block` 会盖掉 UA 对 `[hidden]` 的 `display:none`。 */
+    .tool-command[hidden] { display: none; }
+    /* ── 实时输出（`session.tool_update`，业主 2026-09-22 缺陷②）──────────────────────────
+       跑的过程中就往卡片里写「到目前为止的尾部」。与 `.tool-result` 同一口径（pre-wrap / 限高
+       16rem / 内部滚动），顶部那条 meta 是**诚实标记**（「已输出 N 行」/「至少 N 行」）。 */
+    .tool-live { margin: .35rem 0 0; }
+    .tool-live-meta { color: #8abeb7; font-size: 11px; margin-bottom: .2rem; }
+    .tool-live-body { margin: 0; max-height: 16rem; overflow: auto; color: #aaaeb7; white-space: pre-wrap; overflow-wrap: anywhere; }
+    /* TUI 平价：工具卡标题行上的耗时（跑着每秒跳、跑完冻结）。格式逐字用 pi 的
+       `${(ms/1000).toFixed(1)}s`（`dist/core/tools/renderers/bash.js:23`）；muted 与 `.tool-toggle` 同色。
+       `flex:none` 是必要条件：不然 `.tool-args` 一长就把这个标签挤成逐字换行（`npm run test:textwrap` 的那条课）。 */
+    .tool-duration { flex: none; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    /* 工具卡正文里「没有显式 timeout ⇒ 本机缺省 N s」那一行（值来自 web/generated/plugin-values.js，
+       前端不写死）。与 `.tool-result` 同层的块级小字、同一套 muted 灰，不新造视觉语言。
+       ⚠️ 为什么不在 `.tool-call` 那一行：那一行有**恒为一条（≤26px）**的硬规矩（`npm run test:toolcmd`）。 */
+    .tool-timeout-note { margin: .35rem 0 0; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+    .tool-result { margin: .35rem 0 0; max-height: 16rem; overflow: auto; color: #aaaeb7; white-space: pre-wrap; }
+    /* M-26 / M-27：工具输出与 thinking 的折叠开关（按钮派；不加任何 TUI 快捷键映射）。
+       这两个按钮在 slot.css 里被排除出通用 3px 槽规则（行内实现按钮，不让一块正文多长一条槽）。 */
+    .tool-toggle, .thinking-toggle, .bash-toggle { border: 0; background: transparent; color: #7c7f8a; font-size: 11px; font-style: normal; padding: 0; white-space: nowrap; }
+    .tool-toggle:hover, .thinking-toggle:hover, .bash-toggle:hover { color: var(--bright); }
+    .tool-toggle, .bash-toggle { margin-left: auto; }
+    .tool-output { display: block; }
+    .message-thinking-head { display: flex; align-items: center; gap: .4rem; }
+    .message-thinking[data-collapsed="true"] .thinking-body { display: none; }
+    .tool-bad .tool-result { color: #e68a8a; }
+    /* M-25：工具 diff 的逐行 +/-（语义照 TUI 的 `components/diff.js`：+行 / -行 / 上下文行 / `...` 省略行）。
+       配色就用本页已有的语义色（绿=成功、红=失败、灰=次要），不另开一套调色板。
+       行本身 `pre-wrap`（不横向滚 —— 与 `.tool-result` 同一口径），换行由正文列宽决定。 */
+    .tool-diff { margin: .35rem 0 0; }
+    .tool-diff-head { color: #777b85; font-size: 11px; }
+    .tool-diff-body { max-height: 16rem; overflow: auto; }
+    .tool-diff-line { white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+    .tool-diff-line[data-diff="add"] { color: #7bc47f; }
+    .tool-diff-line[data-diff="remove"] { color: #e06868; }
+    .tool-diff-line[data-diff="context"], .tool-diff-line[data-diff="raw"] { color: #858892; }
+    .tool-diff-line[data-diff="skip"] { color: #666a73; }
+    /* details 超限 / 不能序列化：只给说明 + 原文预览，**不当 diff 画**。 */
+    .tool-details { margin: .35rem 0 0; }
+    .tool-details-note { padding: .35rem .45rem; border: 1px dashed #8c7440; color: #c9a74e; font-size: 12px; overflow-wrap: anywhere; }
+    .tool-details-preview { margin: .25rem 0 0; padding: .35rem .45rem; max-height: 12rem; overflow: auto; background: #0b0c0f; color: #aaaeb7; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    /* M-31：图片块内联显示（`web/render.js` 的 imageFigure）。宽高由图片文件头解析出来
+       （`web/image-size.mjs`）并写进 `width`/`height` 属性 ⇒ 解码完成前后盒子一样大，不会有加载跳变；
+       认不出尺寸/坏码时退化成 `.message-image-bad` 的说明行，不留空白。 */
+    .message-image { margin: .4rem 0; }
+    .message-image-meta { color: #777b85; font-size: 11px; }
+    .message-image img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); background: #0b0c0f; }
+    /* 尺寸读不出来时才走到这里：先按一行高占位，别让盒子塌成 0。 */
+    .message-image[data-state="pending"] img { min-height: 1rem; }
+    .message-image-bad { margin: .25rem 0 0; padding: .35rem .45rem; border: 1px dashed #8c7440; color: #c9a74e; font-size: 12px; overflow-wrap: anywhere; }
+    .extra-message { border: 1px dashed #9b79b8; background: #211827; color: #ceb9dc; white-space: pre-wrap; }
+    .extra-label { color: #b99acb; font-weight: 700; }
+    .compaction-note { display: grid; gap: .2rem; background: #282318; color: #d8b45a; font-size: 12px; }
+    .compaction-summary { color: #b9aa7d; white-space: pre-wrap; }
+    #composer { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .45rem; margin: 0; padding: .65rem .75rem; border-top: 1px solid var(--line); background: #101115; }
+    #command-palette, #mention-palette { grid-column: 1 / -1; max-height: min(20rem, 45vh); overflow: auto; border: 1px solid var(--line); background: #0d0e11; color: var(--text); }
+    .command-palette-item, .mention-palette-item { width: 100%; min-width: 0; height: 26px; display: flex; align-items: center; gap: .5rem; padding: 0 .55rem; border: 0; border-bottom: 1px solid #1e2025; border-radius: 0; background: transparent; text-align: left; }
+    .command-palette-item.selected { background: var(--raised); box-shadow: inset 2px 0 0 var(--accent); }
+    .command-palette-item.unavailable { color: #696c75; }
+    .command-palette-item.unavailable.selected { box-shadow: inset 2px 0 0 #d8b45a; }
+    .command-name { flex: none; color: var(--accent); font-weight: 600; }
+    .command-source, .command-unavailable { flex: none; padding: 0 .25rem; border: 1px solid var(--line); color: #777b85; font-size: 10px; }
+    .command-argument { flex: none; color: #858892; font-size: 11px; }
+    .command-description { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #858892; font-size: 11px; }
+    .command-unavailable { border-style: dashed; border-color: #8c7440; color: #c9a74e; }
+    .command-palette-note, .mention-palette-note { min-height: 26px; display: flex; align-items: center; padding: 0 .55rem; color: #777b85; font-size: 11px; }
+    .mention-palette-separator { height: 26px; display: flex; align-items: center; padding: 0 .55rem; border-top: 1px solid #343740; border-bottom: 1px solid #1e2025; background: #15171b; color: #777b85; font-size: 11px; letter-spacing: .08em; }
+    .mention-palette-item.selected { background: var(--raised); }
+    .mention-name { flex: none; max-width: 38%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); font-weight: 600; }
+    .mention-badge { flex: none; padding: 0 .25rem; border: 1px solid var(--line); color: #777b85; font-size: 10px; }
+    .mention-badge.archived { border-color: #8c7440; color: #c9a74e; }
+    .mention-id { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #858892; font-size: 11px; }
+    textarea { min-height: 3.5rem; max-height: calc(14em + 1.1rem + 2px); resize: none; padding: .55rem; line-height: 1.4; overflow-y: hidden; }
+    textarea:focus, input:focus { outline: 1px solid #555862; outline-offset: -1px; }
+    #send { min-width: 4rem; }
+    /* 同一条常驻状态行也会带一段**无断点的长 token**（可达形状：页面自己那次 `GET /settings` 读失败 ——
+       `web/app.js` 把它做成全局通知，正文就是服务端回的那句人话，含文件全路径 / 出错的那个值，
+       `web/settings-panel.mjs` 引的 `UiSettingsFileError` 那条路）。没有 `overflow-wrap`，它的**行内溢出**
+       会经 overflow:visible 一路传到文档滚动区（实测 1200×760：整页 scrollWidth **1778 / innerWidth 1200**、
+       `#notice` 854/**1459**、文字右边界 **1778**、`#composer` 881/**1474**；420×820：1470/420）。
+       ⚠️ 这里**只加 `overflow-wrap` 一条**（与另两处不同）：`#notice` 的瓶颈不是 grid 项的 `min-width:auto`
+       —— 它的首列本来就是 `minmax(0, 1fr)`，实测**单加 `min-width: 0` 与未修逐字节相同**（854/1459/605、整页 1778），
+       而单加 `overflow-wrap: anywhere` 就把整页拉回 1200（`scrollX` 0、文字右边界 1184）。普通文案零影响（高度仍 16px 1 行）。 */
+    #notice { grid-column: 1 / -1; min-height: 1rem; color: #7f9baf; font-size: 11px; overflow-wrap: anywhere; }
+    /* ── 模型建议（对话内的「推荐回复」）───────────────────────────────────────────────
+       一排 26px 单行的候选 chip，**输入框正上方**（composer 内部的一行，横跨两列）。
+       · chip 上是**完整文本**（不截断）：一点就发出去，误点也要看得清；
+       · 一排横向可滚（窄屏不把布局顶出去、也不换行）；最多 3 颗（服务端校验过，这里照画）；
+       · 低对比、单行 26px，与邻座控件同一档；**无阴影/渐变/>150ms 过渡**（`test:slot` 逐元素量）。 */
+    #suggestions { grid-column: 1 / -1; min-width: 0; height: 26px; display: flex; align-items: center; gap: .35rem; }
+    .suggestions-label { flex: none; color: #666a73; font-size: 11px; }
+    #suggestions-list { flex: 1 1 auto; min-width: 0; height: 26px; display: flex; align-items: center; gap: .3rem; overflow-x: auto; overflow-y: hidden; }
+    .suggestion-chip { flex: none; height: 26px; padding: 0 .5rem; white-space: nowrap; font-size: 12px; color: var(--muted); background: transparent; }
+    .suggestion-chip:hover { color: var(--bright); border-color: #4a4d56; }
+    #suggestions-close { flex: none; width: 26px; height: 26px; padding: 0; border: 0; background: transparent; color: #666a73; line-height: 1; }
+    #suggestions-close:hover { color: var(--bright); }
+    .live-message { display: contents; }
+    /* 流式那一段的边框用绿色提示「正在流」，与既有 .live-message 同一档底色；结构（块）与结束态一致。 */
+    .live-message > .message { border-color: #52756f; }
+
+    /* ── 复制的手动框（三级降级的第 ③ 级）────────────────────────────────────────────
+       只在 "① 剪贴板 API 与 ② execCommand 兼容路径都不成" 时出现，DOM 与样式都是**最小一组**：
+       它要把文本**全选**着交到人手里（Ctrl+C），并如实写清为什么与怎么办 —— 不让「复制失败」变成
+       死胡同。三级的共用实现在 `web/copy-text.js`（`#copy-text` / `#copy-lead` / `#copy-why` /
+       `#copy-close` 这几个 id 就是它按默认口径找的）。 */
+    .copy-panel { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: auto; background: rgba(6, 7, 9, .62); }
+    .copy-panel-box { width: min(620px, calc(100vw - 2rem)); display: grid; gap: .5rem; padding: .7rem; border: 1px solid var(--line); border-radius: 2px; background: var(--panel); }
+    .copy-panel-box h2 { margin: 0; font-size: 13px; color: var(--bright); }
+    .copy-lead { margin: 0; color: var(--text); font-size: 12px; line-height: 1.6; }
+    .copy-why { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .copy-text { min-height: 8rem; max-height: 45vh; padding: .45rem; overflow: auto; resize: vertical; white-space: pre-wrap; font-size: 12px; }
+    .copy-actions { display: flex; justify-content: flex-end; gap: .4rem; }
+    .copy-actions button { padding: .25rem .8rem; }
+
+    @media (max-width: 720px) {
+      body { grid-template-columns: 1fr; grid-template-rows: 35vh minmax(0, 1fr); }
+      aside.tree { border-right: 0; border-bottom: 1px solid var(--line); }
+      .tree-nav { height: 29px; padding-inline: .3rem; }
+      .new-session { padding: .3rem; }
+      #tree { min-height: 108px; padding: .1rem .2rem; }
+      header { min-height: 48px; padding: .4rem .55rem; }
+      #messages { padding: .5rem; }
+      #composer { padding: .5rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="/vendor/highlight-theme.css">
+</head>
+<body>
+  <!-- sopho-pi v2.2 · v2.1 terminal-density visual language -->
+  <aside class="tree">
+    <nav class="tree-nav" aria-label="主导航">
+      <h1>会话</h1>
+      <button id="tree-search-toggle" type="button" aria-expanded="false" aria-controls="tree-search" title="搜索会话（名字或路径）">搜索</button>
+      <!-- M-18（排序模式）：单击在「最近 / 最早 / 名称」之间循环（= TUI 的 Ctrl+S 切排序；
+           网页是按钮派，入口常驻在导航，不占左栏竖向空间）。兄弟顺序内存态、不落盘。 -->
+      <button id="tree-sort-toggle" type="button" title="会话排序：最近">排序 最近</button>
+      <button id="new-session-toggle" type="button" aria-expanded="false">＋ 新会话</button>
+    </nav>
+    <section id="new-session-panel" class="new-session" aria-label="新会话" hidden>
+      <div class="new-session-label">新会话在哪个目录工作？</div>
+      <div class="new-session-actions">
+        <button id="new-project" type="button">项目根</button>
+        <button id="new-scratch" type="button">临时目录</button>
+      </div>
+      <form id="advanced-session" class="advanced-session">
+        <input id="new-cwd" type="text" placeholder="指定目录（绝对路径）" aria-label="新会话目录">
+        <button type="submit">建这条会话</button>
+      </form>
+      <div class="new-session-footer"><button id="new-session-cancel" type="button">取消</button></div>
+    </section>
+    <section id="tree-search" class="tree-search" aria-label="搜索会话" hidden>
+      <input id="tree-search-input" type="search" placeholder="搜名字或路径" aria-label="按名字或路径筛选会话" autocomplete="off">
+      <button id="tree-named-only" type="button" aria-pressed="false" title="只显示有名字的会话（name 非空）">只看命名</button>
+    </section>
+    <section id="device-panel" class="device-panel">
+      <h2>远端设备</h2>
+      <div id="devices" aria-live="polite">正在读取…</div>
+    </section>
+    <div id="tree" aria-live="polite">正在读取…</div>
+    <div class="tree-footer">
+      <div id="tree-connection" class="tree-connection" aria-live="polite">○ 未连接 · 0 个会话</div>
+      <!-- 设置入口（业主 2026-09-22 裁定「换别的入口：右栏或底栏加一个按钮」；同日再定「配置改成叫设置」
+           ＋「我希望设置是一个悬浮窗，而不是打开一个新窗口」）。
+           ⇒ 它**不再导航**：点它就地开/关下面的 `#settings-overlay`（`aria-expanded` 是激活态的状态源）。
+           独立页 `/settings.html` 这条直链**仍在**（深链/兜底），浮层里也给它留了一条指路链接。 -->
+      <button id="tree-settings" class="tree-settings" type="button" aria-expanded="false" aria-controls="settings-overlay" title="网页设置（思考折叠的默认 / 维护者会话）">设置</button>
+    </div>
+  </aside>
+  <main data-view="session">
+    <header>
+      <h2 id="session-title">请选择会话</h2>
+      <div class="session-actions">
+        <a id="export" href="#" target="_blank" rel="noopener" hidden title="导出这条会话的快照（HTML）">快照</a>
+        <button id="rename" type="button" hidden disabled>改名</button>
+        <button id="archive" type="button" disabled hidden>存档</button>
+        <button id="delete" type="button" disabled hidden title="把这条会话移出列表（底层是归档：会话文件不删，可在下方「存档」箱找回）">删除</button>
+        <button id="compact" type="button" disabled>✂ 压缩</button>
+        <button id="abort" type="button" disabled>■ 停止</button>
+      </div>
+      <!-- 视图切换（业主 2026-09-20 定）：顶栏**右侧**的两个页签式按钮。
+           未答数并入 `问题` 这一项（`问题 N`；N=0 时只显示 `问题`）—— 不另设角标。 -->
+      <div id="view-tabs" role="tablist" aria-label="右栏视图">
+        <button id="view-tab-session" type="button" role="tab" aria-selected="true" data-view="session" disabled>会话</button>
+        <button id="view-tab-questions" type="button" role="tab" aria-selected="false" data-view="questions" aria-controls="questions-pane" disabled>问题</button>
+        <button id="view-tab-annotations" type="button" role="tab" aria-selected="false" data-view="annotations" aria-controls="annotations-pane" title="所有卡片的反馈（跨会话，只读清单）">标注</button>
+        <button id="view-tab-debug" type="button" role="tab" aria-selected="false" data-view="debug" aria-controls="debug-pane" title="实例/代理工具情况（跨会话，只读；取不到的项如实写「这一项取不到」）">调试</button>
+      </div>
+      <form id="rename-form" hidden>
+        <input id="session-title-input" type="text" aria-label="会话标题" autocomplete="off">
+        <button id="rename-save" type="submit">保存</button>
+        <button id="rename-cancel" type="button">取消</button>
+      </form>
+      <div id="session-cwd" aria-live="polite" hidden></div>
+      <div id="session-usage" aria-live="polite">本轮模型未知 · 累计未知 · 距压缩阈值未知（服务端未提供）</div>
+      <div id="session-context" aria-live="polite" hidden></div>
+      <div id="session-connection" aria-live="polite">○ 未连接 · 会话流</div>
+      <section id="compact-confirm" role="dialog" aria-live="assertive" aria-label="确认压缩" hidden>
+        <span id="compact-confirm-text"></span>
+        <button id="compact-confirm-yes" type="button">确认压缩</button>
+        <button id="compact-confirm-no" type="button">取消</button>
+      </section>
+      <!-- M-18（删除会话）：⚠️ 不做真删除。底层复用 `POST /sessions/{id}/archive {archived:true}`
+           （= TUI trash 的“移出列表且可恢复”语义在我们的实现里就是归档），所以先要一次确认，
+           并在文案里如实说清“底层是归档、能找回”。与 `#compact-confirm` 同一套结构，不另造控件。 -->
+      <section id="delete-confirm" role="dialog" aria-live="assertive" aria-label="确认删除会话" hidden>
+        <span id="delete-confirm-text"></span>
+        <button id="delete-confirm-yes" type="button">确认删除</button>
+        <button id="delete-confirm-no" type="button">取消</button>
+      </section>
+    </header>
+    <div class="messages-pane">
+      <section id="messages" aria-live="polite"></section>
+      <button id="jump" type="button" title="回到底部" aria-hidden="true" tabindex="-1">↓ 回到底部</button>
+    </div>
+    <!-- 问题页：与正文区**同占 main 第 2 行**（grid-area: 2 / 1，重叠），切页不动直播、也不动正文滚动位置。 -->
+    <section id="questions-pane" aria-label="待确认的问题" hidden>
+      <div id="questions-toolbar">
+        <div id="questions-filters" role="tablist" aria-label="问题状态">
+          <button id="questions-filter-open" type="button" role="tab" aria-selected="true" data-qstatus="open">未答</button>
+          <button id="questions-filter-answered" type="button" role="tab" aria-selected="false" data-qstatus="answered">已答/已关</button>
+        </div>
+        <button id="questions-refresh" type="button" title="重新读取这份清单">刷新</button>
+      </div>
+      <div id="questions-list" aria-live="polite"></div>
+      <div id="questions-notice" aria-live="polite" data-level="info"></div>
+    </section>
+    <!-- 标注页（`docs/history/design-annotations.md` v1）：与问题看板**同级入口**的只读清单。
+         内容是跨会话的全局账（`GET /annotations`），所以这个页签不随会话置灰。 -->
+    <section id="annotations-pane" aria-label="卡片反馈清单" hidden>
+      <div id="annotations-toolbar">
+        <div id="annotations-filters" role="tablist" aria-label="标注状态">
+          <button id="annotations-filter-all" type="button" role="tab" aria-selected="true" data-astatus="all">全部</button>
+          <button id="annotations-filter-open" type="button" role="tab" aria-selected="false" data-astatus="open">未处理</button>
+        </div>
+        <button id="annotations-refresh" type="button" title="重新读取这份清单">刷新</button>
+      </div>
+      <div id="annotations-list" aria-live="polite"></div>
+      <div id="annotations-notice" aria-live="polite" data-level="info"></div>
+    </section>
+    <!-- 调试页（业主 2026-09-22 裁定：与 会话/问题/标注 **同级**的第四个页签）：只读的机器事实，
+         分两个来源：① A 上的逻辑端点 `GET /debug/instances`（经 `/api` 反代）；② B 自己的
+         `GET /app-host`（**同源**直接取，不走 `/api`）。两个来源各自成败、各自如实报。 -->
+    <section id="debug-pane" aria-label="调试信息" hidden>
+      <div id="debug-toolbar">
+        <div id="debug-scope" title="A 的实例/池事实 + B 本机事实；两个来源各自成败、各自如实报">数据源：A GET /debug/instances（经 /api）· B GET /app-host（同源）</div>
+        <button id="debug-refresh" type="button" title="重新读取这两份调试信息">刷新</button>
+      </div>
+      <div id="debug-list" aria-live="polite"></div>
+      <div id="debug-notice" aria-live="polite" data-level="info"></div>
+    </section>
+    <!-- 队列属于输入区：紧贴 composer 上沿。顶栏装的是会话级事实（标题/用量/连接），
+         而队列是「等一下要发出去的东西」，离输入框最远的位置上最容易被漏看。 -->
+    <!-- M-41：插件 notify 的通知行。放在输入框上方、独立一行（不进 `#messages`，不碰消息顺序）；
+         info 自动消失、warning/error 留到被下一条替换或被 × 关掉。两个视图（会话/问题）都可见。 -->
+    <div id="session-notice" role="status" aria-live="polite" data-level="info" hidden>
+      <span id="session-notice-text"></span>
+      <button id="session-notice-close" type="button" data-slot="off" title="关闭这条通知" aria-label="关闭通知">×</button>
+    </div>
+    <div id="queue-status" aria-live="polite" hidden></div>
+    <form id="composer">
+      <div id="command-palette" role="listbox" aria-label="斜杠命令" hidden></div>
+      <!-- 对话内的「推荐回复」（模型建议）：一排 ≤3 颗 chip，贴在**输入框正上方**（在 composer 里、
+           紧挨 textarea 之前 —— 队列那条 `#queue-status` 与 composer 的相邻关系一个字不动）。
+           服务端在**回合落定之后**生成，落成那条助手消息的可选字段并同时发一帧 `session.suggestions`；
+           前端**只在收到时**才画出这排（没有就不画占位、不画 spinner）—— 收 `session.suggestions`
+           与刷新后读 `/messages` 的可选字段两条路都走 `web/render.js` 的 `renderSuggestions()`。
+           点击 = 直接发送（走与打字**同一条**投递路）；⌥1–⌥3 选那一颗；Esc / × 收起。 -->
+      <div id="suggestions" hidden>
+        <span class="suggestions-label">模型建议</span>
+        <div id="suggestions-list" role="group" aria-label="模型建议的下一句（⌥1–⌥3 选择，Esc 收起）"></div>
+        <button id="suggestions-close" type="button" data-slot="off" title="收起这一排（本轮不再显示）" aria-label="收起模型建议">×</button>
+      </div>
+      <textarea id="prompt" placeholder="选一个会话，然后说话…（/ 开命令面板，@ 引用会话）" title="空闲时 Enter 发送；运行中 Enter 插话；Alt/Cmd+Enter 排到队尾；Shift+Enter 换行" disabled></textarea>
+      <button id="send" type="submit" disabled>发送</button>
+      <!-- I-12：这一行是**常驻的状态提示行**（用户 2026-09-19 批准，零新增元素）：默认显示当前模式
+           （先选一个会话 / Enter 发送 · Shift+Enter 换行 / 流式中 —— Enter 插话 · Alt+Enter 排到队尾 /
+           正在压缩上下文…（可能要几十秒）），`notice(...)` 的瞬时报文压过它（错误优先）。
+           `min-height: 1rem` 就是占位来源：文案变长变短都不动布局（详见 web/app.js 的 renderNotice）。 -->
+      <div id="notice">先选一个会话</div>
+    </form>
+  </main>
+  <!-- 设置浮层（业主 2026-09-22）：居中模态框，遮罩半透明。内容是独立页 `web/settings.html` 的那两项，
+       读写都是同一对 `GET/PATCH /settings`（同一份侧车）——**不许各存一份**。行为在 `web/settings-panel.mjs`。
+       `hidden` 管可见性；`data-state="open"` 只管那 120ms 的入场动效（reduced-motion 下为 none）。 -->
+  <div id="settings-overlay" class="settings-overlay" hidden>
+    <section id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-panel-title" tabindex="-1">
+      <header class="settings-panel-head">
+        <h2 id="settings-panel-title">设置</h2>
+        <button id="settings-panel-close" type="button" title="关闭设置（Esc）" aria-label="关闭设置">×</button>
+      </header>
+      <p class="settings-panel-lede">
+        这里是<strong>服务端保存</strong>的网页设置（跟人走：换浏览器、换机器都读到同一份）。
+        独立页 <a href="/settings.html">/settings.html</a> 是同一份设置的直链（深链/兜底）。
+      </p>
+      <section class="settings-panel-card" aria-labelledby="settings-panel-fold-title">
+        <h3 id="settings-panel-fold-title">思考折叠</h3>
+        <p class="settings-panel-hint">
+          新渲染的思考块默认是展开还是收起。你在某一个会话里 <strong>手动</strong> 点过的展开/收起仍然优先
+          （那一条按会话记在这个浏览器里，不会被这里的全局默认覆盖）。
+        </p>
+        <div class="settings-panel-field" id="settings-panel-fold" role="radiogroup" aria-labelledby="settings-panel-fold-title">
+          <label class="settings-panel-option">
+            <input type="radio" name="settings-panel-thinking-default-fold" value="expanded" data-slot="off" disabled>
+            <span>默认展开<small>与 pi TUI 的默认一致（思考默认可见）</small></span>
+          </label>
+          <label class="settings-panel-option">
+            <input type="radio" name="settings-panel-thinking-default-fold" value="collapsed" data-slot="off" disabled>
+            <span>默认收起<small>思考块默认折起，点一下才看</small></span>
+          </label>
+        </div>
+        <p class="settings-panel-state" id="settings-panel-fold-state" role="status" aria-live="polite">正在读取…</p>
+      </section>
+      <section class="settings-panel-card" aria-labelledby="settings-panel-notify-title">
+        <h3 id="settings-panel-notify-title">卡片反馈的维护者会话</h3>
+        <p class="settings-panel-hint">
+          新反馈到达时，服务端会通知这里填的那条会话（发一条说明 ＋ <strong>把它叫起来</strong>）。
+          <strong>留空 = 不通知</strong>。
+        </p>
+        <div class="settings-panel-field">
+          <input id="settings-panel-notify-input" class="settings-panel-input" type="text" spellcheck="false" autocomplete="off"
+                 placeholder="完整 uuid；留空 = 不通知" disabled>
+          <div class="settings-panel-actions">
+            <button id="settings-panel-notify-save" class="settings-panel-button" type="button" disabled>保存</button>
+          </div>
+        </div>
+        <p class="settings-panel-state" id="settings-panel-notify-state" role="status" aria-live="polite">正在读取…</p>
+      </section>
+      <section class="settings-panel-card" aria-labelledby="settings-panel-suggestions-title">
+        <h3 id="settings-panel-suggestions-title">对话内的推荐回复</h3>
+        <p class="settings-panel-hint">
+          每个回合<strong>结束之后</strong>另起一次模型调用，在输入框上方给 ≤3 条「下一句」候选（点一下就直发出去）。
+          <strong>关掉 = 一次模型调用都不发</strong>。
+        </p>
+        <div class="settings-panel-field">
+          <label class="settings-panel-option">
+            <input id="settings-panel-suggestions-enabled" type="checkbox" data-slot="off" disabled>
+            <span>启用<small>默认开启（业主 2026-09-23 的口径）；模型给空数组时不出那一排</small></span>
+          </label>
+        </div>
+        <p class="settings-panel-state" id="settings-panel-suggestions-state" role="status" aria-live="polite">正在读取…</p>
+      </section>
+      <section class="settings-panel-card" aria-labelledby="settings-panel-seal-title">
+        <h3 id="settings-panel-seal-title">压缩即封存</h3>
+        <p class="settings-panel-hint">
+          压缩回合<strong>落定之后</strong>、且没有任何 runtime 拿着它时，自动把会话文件裁成「摘要 ＋ 保留段 ＋ 尾段」，
+          被裁掉的那一段另起一个新 id 归档。<strong>关掉 = 不再自动做</strong>（显式封存仍然可用）。
+        </p>
+        <div class="settings-panel-field">
+          <label class="settings-panel-option">
+            <input id="settings-panel-seal-auto" type="checkbox" data-slot="off" disabled>
+            <span>自动封存<small>默认开启（业主 2026-09-22 批的默认）；关掉只是不再自动做</small></span>
+          </label>
+        </div>
+        <p class="settings-panel-state" id="settings-panel-seal-state" role="status" aria-live="polite">正在读取…</p>
+      </section>
+      <p class="settings-panel-foot">
+        <span class="settings-panel-foot-text">设置由服务端保存并校验：未知的键或非法的值会被 <strong>拒绝</strong>（不是一个字都不说就忽略）。</span>
+        <!-- 读不到时出现的**重试**（业主 2026-09-22 口径：失败要可见 ＋ 保留重试）：平时 hidden，
+             读/写失败后出现；点它就地重读一次（不用关掉再开）。 -->
+        <button id="settings-panel-retry" class="settings-panel-button" type="button" hidden>重试读取</button>
+      </p>
+    </section>
+  </div>
+  <!-- 复制的手动框（三级降级的第 ③ 级）：安全上下文之外（HTTPS 或 localhost / 127.0.0.1 之外）
+       浏览器不提供剪贴板 API，兼容路径也可能被拒 —— 到这里就把文本全选好交出去，按 Ctrl+C 就行。
+       为何/怎么办由 `web/copy-text.js` 如实写进去（它是主产品页与设计器页共用的那一份）。 -->
+  <div class="copy-panel" id="copy-panel" hidden role="dialog" aria-modal="true" aria-labelledby="copy-panel-title">
+    <div class="copy-panel-box">
+      <h2 id="copy-panel-title">手动复制</h2>
+      <p class="copy-lead" id="copy-lead"></p>
+      <p class="copy-why" id="copy-why"></p>
+      <textarea class="copy-text" id="copy-text" readonly spellcheck="false" aria-label="要复制的内容（已全选，按 Ctrl+C 复制）"></textarea>
+      <div class="copy-actions">
+        <button type="button" id="copy-close" title="收起来（Esc）">关掉（Esc）</button>
+      </div>
+    </div>
+  </div>
+  <!-- 三级降级的**唯一一份**实现（经典脚本：在下面的 module 脚本之前同步执行）。 -->
+  <script src="/copy-text.js"></script>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/vendor/highlight.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

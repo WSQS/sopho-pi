@@ -1,0 +1,404 @@
+{
+  "_what": "反证臂接缝门（bin/check-arm-seams.mjs）的「没进扫描范围的臂」机械台账。",
+  "_why": "本门只认 test/**/*.mjs 里 from:/to: 与 anchor:/replace: 两种成对声明的形状。别的形状的臂进不了扫描 —— 那份清单必须逐条摆在明面上，且可以被机械核对，而不是靠人记（原单「没验到什么」第 1、4 条）。",
+  "_how": "每条：file（仓内路径，必须存在）/ shape（它是什么形状）/ decision（excluded = **有臂但形状进不了扫描**；partial = 同一文件里另有进了扫描的臂；not-an-arm = **其实没有臂**，只是被臂标记误捕 / 或为了让一条结论有落点）/ present（必须逐字在文件里找得到的证据串）/ absent（必须找不到的串，用来证明「这个文件没有臂」这条结论还成立）/ reason（为什么进不了现在的扫描）。present/absent 由门逐条机械核对；decision 与「该文件实际贡献了几条臂」也必须相符（partial 必须 ≥1，excluded/not-an-arm 必须 0）。",
+  "_rules": [
+    "带臂标记（--reverse / MUTANT / expectRed / anchor:）的 test/**/*.mjs，要么贡献 ≥1 条可扫描的臂，要么在这儿有一条。两边都没有 ⇒ 门红。",
+    "present 里每一串必须逐字在文件里找得到；absent 里每一串必须找不到 —— 台账腐坏/结论过期 ⇒ 门红。",
+    "decision=partial 的文件必须 ≥1 条臂；decision=excluded / not-an-arm 的必须 0 条 —— 分类说错 ⇒ 门红。",
+    "范围声明：本门扫的就是 <ROOT>/test（臂目录）。2026-09-20 拿本门的 extractArms() 把非 test 的 58 个 .mjs/.js/.ts 全跑过一遍，只有 server/design-spec.mjs 撞上臂标记（那是比对行）；该文件已于 2026-10-05 随「设计编辑页 v3」退休、它那条 not-an-arm 台账一并删除 ⇒ 今天 test/ 之外没有已登记的臂；若将来有非 test 文件带臂，要重做这次普查。"
+  ],
+  "entries": [
+    {
+      "file": "test/abandoned-request-cost.mjs",
+      "shape": "flag-env-mutant",
+      "decision": "excluded",
+      "present": [
+        "`--reverse` 是反证臂",
+        "SOPHO_MESSAGE_ABORT_CHECK_MS"
+      ],
+      "reason": "`--reverse` 不改任何 from/to 串：它的变异是「把检查点关掉」（环境变量 SOPHO_MESSAGE_ABORT_CHECK_MS=0，见 argv 解析那段），判据整套在 --assert 里；没有一串字节可以去仓库里逐字找。原单点名过这一条。"
+    },
+    {
+      "file": "test/archive-marker-shape.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm-receipt-lies",
+        "const from = \"      manager.appendCustomEntry(ARCHIVE_ENTRY"
+      ],
+      "reason": "臂在**沙箱副本** server/base-logic.mjs 上做，接缝写成函数里一个局部 `const from = \"…\"`（不是对象属性 `from:`），本门的抽臂只认属性位置的 from ⇒ 进不了扫描。"
+    },
+    {
+      "file": "test/archive-session-tool.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm-extra-limit",
+        "const from = '"
+      ],
+      "reason": "同上：局部 `const from` + 注释里写着 `--reverse-arm-extra-limit`，改的是副本树里的插件源码；不是 `from:`/`to:` 成对声明。"
+    },
+    {
+      "file": "test/archive-worktree-hint.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=no-hint",
+        "--reverse-arm=non-git-degrades",
+        "--reverse-arm=two-dot-stats",
+        "${baseRef}...${branchRef}",
+        "const from = '"
+      ],
+      "absent": [
+        "from: '\\t\\t\\tconst hint",
+        "expectRed"
+      ],
+      "reason": "三条臂（`--reverse-arm=no-hint` / `--reverse-arm=non-git-degrades` / `--reverse-arm=two-dot-stats`）都在**副本树**里改：第一条把 `index.ts` 那句 `const hint = ok && archived ? await archiveWorktreeHint(params.id) : null;` 换成 `const hint = null;`（整段拿掉）；第二条把 `worktree-hint.mjs` 里「cwd 不在任何 git 仓里 ⇒ 静默」那一行退回旧行为（当成判不出来 ⇒ 降级文案）；第三条把「它自己的改动」那步的**三点**（`origin/master...branch` = merge-base→tip）退回**两点**（`origin/master..branch` = 两条 tip 的差异）—— 就是 2026-10-11 修掉的那个 bug（文件数与 commitsAhead 描述的不是同一件事）。接缝都是函数里的局部 `const from = \"…\"`（不是对象属性 `from:`）⇒ 本门的抽臂只认属性位置的 from，进不了扫描。"
+    },
+    {
+      "file": "test/big-session-refetch.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=no-tail-query"
+      ],
+      "reason": "`--reverse-arm=no-tail-query`：在副本上摘掉客户端游标那段（整段删除/改写），不是「某个字面串 ⇒ 另一个字面串」的配对，接缝没有单一字面量可比。"
+    },
+    {
+      "file": "test/browser-sandbox-isolation.mjs",
+      "shape": "flag-child-process",
+      "decision": "excluded",
+      "present": [
+        "--reverse-child"
+      ],
+      "reason": "反证是**同文件起的子进程**（`--reverse-child` 那一半），靠父子进程行为差异判红；没有可逐字定位的接缝串。"
+    },
+    {
+      "file": "test/designer-freshness.mjs",
+      "shape": "flag-byte-flip",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=onebyte"
+      ],
+      "reason": "`--reverse-arm=onebyte`：拷一份产物、把 sha256 里**一个字符**翻掉（`original.replace(`sha256:${digestHit[1]}`, …)`），接缝是「运行时算出来的摘要」，不是仓库里的固定串。"
+    },
+    {
+      "file": "test/designer-sample.mjs",
+      "shape": "programmatic-mutate",
+      "decision": "excluded",
+      "present": [
+        "async mutate(dest)",
+        "'stale-generator': {",
+        "text.replace(/from: \\{ screen: 'main', state: 'default' \\}/g,"
+      ],
+      "reason": "两条臂都是 `async mutate(dest) { … }` 函数：split 直接造新文件；stale-generator 拿**正则**（只认 `from: { screen: 'main', state: 'default' }` 这个前缀、不写死整行）删两端 state —— 接缝由函数逻辑描述，静态抽不出「声明串 ⇒ 目标文件」的配对。这条臂里那段注释（讲为什么改用正则）就是本门「被注释掉的 `from:`（已排除）」那一节里**唯一**一条命中。"
+    },
+    {
+      "file": "test/designer-components-source.mjs",
+      "shape": "programmatic-mutate",
+      "decision": "excluded",
+      "present": [
+        "async mutate(dest) {",
+        "'foreign-reader': {",
+        "export const peek = (doc) => doc.components;"
+      ],
+      "reason": "唯一的臂是 `async mutate(dest) { … }` 函数：先把 `scanFiles(ROOT)` 得到的整棵扫描语料拷进沙箱（保持相对路径），再用 `writeFile` **造一个新文件**（`design/samples/two-pane/second-source.mjs`，内容是 `export const peek = (doc) => doc.components;`）—— 接缝是一个**被新造出来的**模块，不是对仓里某个已存在文件里某一串的改写 ⇒ 没有「声明串 ⇒ 目标文件」的配对可供静态扫描。同 `test/designer-sample.mjs` 的 `split` 臂（直接造新文件）是同一种形状。"
+    },
+    {
+      "file": "test/docs-index-complete.mjs",
+      "shape": "flag-fs-mutation",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=missing-doc",
+        "--reverse-arm=dead-link"
+      ],
+      "reason": "臂的变异是**文件系统层**的：新增一份文档不改索引 / 把索引里一条链接指到不存在的路径 —— 改的不是仓库里既有字节，没有可逐字定位的接缝。"
+    },
+    {
+      "file": "test/fallback-proxy-retry.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm",
+        "finishFailedProxy_DISABLED"
+      ],
+      "reason": "`--reverse-arm` 把副本里那条函数**声明改名**（`finishFailedProxy` ⇒ `finishFailedProxy_DISABLED`），靠调用点悬空产生 ReferenceError 判红；锚点是局部 `const anchor = …`，不是对象属性 `from:`。"
+    },
+    {
+      "file": "test/gen-values-freshness.mjs",
+      "shape": "flag-byte-flip",
+      "decision": "partial",
+      "present": [
+        "--reverse-arm=onebyte",
+        "canonical.replace('560px', '561px')"
+      ],
+      "reason": "这个文件里 `--reverse-arm=tornwrite` 那一条 from/to 臂已经进扫描（见 --json 里 kind=from-to：接缝落在 bin/gen-design-values.mjs 的**原子落盘**上）；**剩下这一条** `--reverse-arm=onebyte`：在**生成物副本**上把 `560px` 改成 `561px`（改的是产物而不是源），本门扫的是 test/** 里声明的臂、不扫「产物 vs 源」这条关系 ⇒ 进不了扫描。"
+    },
+    {
+      "file": "test/plugin-values-freshness.mjs",
+      "shape": "flag-byte-flip",
+      "decision": "partial",
+      "present": [
+        "--reverse-arm=onebyte",
+        "canonical.replace('= 1800;', '= 1801;')"
+      ],
+      "reason": "这个文件里 `--reverse-arm=plugin-drift` 那一条 from/to 臂已经进扫描（见 --json 里 kind=from-to：接缝落在 pi-extensions/assistant/index.ts 的常量声明 `const DEFAULT_BASH_TIMEOUT_S = 1800;` 上）；**剩下这一条** `--reverse-arm=onebyte`：在**生成物副本**上把 `= 1800;` 改成 `= 1801;`（改的是产物而不是源），本门扫的是 test/** 里声明的臂、不扫「产物 vs 源」这条关系 ⇒ 进不了扫描。"
+    },
+    {
+      "file": "test/host-ipc-crash.mjs",
+      "shape": "structural-splice",
+      "decision": "excluded",
+      "present": [
+        "`mutation anchor not found: ${marker}`",
+        "mutated-arm crash evidence"
+      ],
+      "reason": "变异是**按索引切**的：`removeEnclosing(marker, startAnchor)` 拿两个锚点算出区间再删，锚点是函数局部变量（`const at = text.indexOf(...)`）而不是能逐字复现的声明串 —— 且它自己的 `assert.ok(...)` 已经在防崩。原单点名过这一条。"
+    },
+    {
+      "file": "test/live-order.mjs",
+      "shape": "data-anchor-only",
+      "decision": "not-an-arm",
+      "present": [
+        "anchor: node.dataset.anchor || null"
+      ],
+      "reason": "这里的 `anchor:` 是**读 DOM 数据字段**（把节点上的 dataset.anchor 记进报告），不是臂的接缝 —— 它被臂标记 `anchor:` 误捕进来，这里按事实放过。"
+    },
+    {
+      "file": "test/manager-questions.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm",
+        "const from = \"        await session.steer(text);"
+      ],
+      "reason": "`--reverse-arm` 在副本 `server/` 上把 steer 那一段改回 followUp；接缝是函数里的局部 `const from`（注释里还写了「锚点带上它后面的回执块」），不是对象属性 from:。"
+    },
+    {
+      "file": "test/questions-token-width.mjs",
+      "shape": "mutant-rules",
+      "decision": "excluded",
+      "present": [
+        "const MUTANT_RULES = ["
+      ],
+      "reason": "变异写成 `MUTANT_RULES` 表：每条是「选择器 + 重写规则」，由一处 apply 循环统一改写 CSS；形状不是 from/to 也不是 anchor/replace 的配对。"
+    },
+    {
+      "file": "test/s1a2-extras-anchor.mjs",
+      "shape": "data-anchor-only",
+      "decision": "not-an-arm",
+      "present": [
+        "anchor: node.dataset.anchor,"
+      ],
+      "reason": "同 live-order：`anchor:` 是 DOM 数据字段（dataset.anchor），不是臂接缝。"
+    },
+    {
+      "file": "test/s1a2-rich-frontend.mjs",
+      "shape": "env-mutant",
+      "decision": "excluded",
+      "present": [
+        "SOPHO_GEOMETRY_MUTANT"
+      ],
+      "reason": "变异完全在**测试体内部**由环境变量决定（`process.env.SOPHO_GEOMETRY_MUTANT === 'narrow-user'`），不声明任何 from/to/anchor ⇒ 本门看不见它，也没有仓内串可比。"
+    },
+    {
+      "file": "test/serve-app-host.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=inherit",
+        "--reverse-arm=js-inherit"
+      ],
+      "reason": "三条臂（inherit / js-inherit / win-inherit）都在副本 `server/app.mjs` 上把某条赋值改回旧写法，再把副本当 entry 起；改写用两句字符串常量比较/替换，不是 from:/to: 属性对。"
+    },
+    {
+      "file": "test/settings-token-width.mjs",
+      "shape": "flag-fs-mutation",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=",
+        "const anchor = `${selector} {"
+      ],
+      "reason": "臂按「选择器 + 属性」在 CSS 副本里删一条声明（`const anchor = `${selector} {`` + indexOf/slice 切），删的是运行期算出来的区间，不是固定字面串。"
+    },
+    {
+      "file": "test/sse-truncation.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "node test/sse-truncation.mjs --reverse",
+        "options.reverse"
+      ],
+      "reason": "`--reverse`（不是 `--reverse-arm`）把「修法①/②」在副本 server/base.mjs / server/app.mjs 里退回旧写法；退回的是一整段行为，没有单一接缝串。"
+    },
+    {
+      "file": "test/stream-jump-cost.mjs",
+      "shape": "css-anchor-property",
+      "decision": "not-an-arm",
+      "present": [
+        "overflow-anchor:none"
+      ],
+      "reason": "臂标记 `anchor:` 是**误捕**：命中的是 CSS 属性名 `overflow-anchor:`（对照实验里把 `overflow-anchor: none;` 摘掉回放修复前），文件里根本没有臂。"
+    },
+    {
+      "file": "test/tool-command-live.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=firstline",
+        "--reverse-arm=noupdate"
+      ],
+      "reason": "两条臂在**前端副本**上改行为（展开态只给首行 / 忽略 session.tool_update），靠浏览器断言判红；没有可逐字定位的接缝串。"
+    },
+    {
+      "file": "test/wt-reclaim.mjs",
+      "shape": "mutant-object-local-const-from",
+      "decision": "excluded",
+      "present": [
+        "const MUTANTS = {",
+        "'tree-projection': {",
+        "'ancestor-only': {",
+        "'placement-unreadable-blind': {",
+        "'two-dot-own-changes': {"
+      ],
+      "reason": "变异写成 `MUTANTS` 表，每条 `apply(source)` 里再取局部 `const from` / `removalFrom`（还带 `assert.ok(source.includes(from))`）；接缝是函数内局部变量，不是对象属性 from:。★ 2026-10-11 本单新增第 5 条臂 `--mutant=two-dot-own-changes`（把「它自己的改动」那步的三点 `origin/master...<branch>` 退回两点 `origin/master..<branch>` ⇒ 该红的 U9/U11/U12，另配 `package.json` 脚本 `test:wt-reclaim:reverse-two-dot-own-changes`）—— 形状与前面四条完全一样（局部 `const from`）⇒ 分类/决策不变。"
+    },
+    {
+      "file": "test/designer-export.mjs",
+      "shape": "env-mutant",
+      "decision": "partial",
+      "present": [
+        "'before-copy-is-after': {",
+        "env: { SOPHO_DESIGNER_BEFORE_COMMIT: FIXED_MERGE_COMMIT }"
+      ],
+      "reason": "这个文件里 4 条 anchor/replace 臂已经进扫描（见 --json 里 kind=anchor-replace）；**剩下这一条**不声明任何文件：它把「改前」故意造错（`env: { SOPHO_DESIGNER_BEFORE_COMMIT: FIXED_MERGE_COMMIT }`），接缝是环境变量而不是仓内字节 ⇒ 进不了扫描。"
+    },
+    {
+      "file": "test/delegate-steer.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm",
+        "const FROM_REVERSE = [",
+        "const FROM_FAKE = ["
+      ],
+      "reason": "`--reverse-arm` / `--reverse-arm-fakereceipt` 在**副本** `server/` 上改 `deliverDelegation`；接缝是函数里的局部 `const FROM_REVERSE = [ … ].join('\n')`（不是对象属性 `from:`）⇒ 进不了本门的抽臂扫描。两条臂都是「把忙 ⇒ steer 改回 followUp」：一条连 mode 一起改回去（回执也变），一条只改 deliverAs（假回执）。"
+    },
+    {
+      "file": "test/delegation-msg-order.mjs",
+      "shape": "no-arm",
+      "decision": "not-an-arm",
+      "present": [
+        "#!/usr/bin/env node"
+      ],
+      "absent": [
+        "--reverse",
+        "MUTANT",
+        "反证臂",
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "原单点名的 17 个「带 --reverse-arm 字样」的门之一 —— **事实上没有臂**（absent 里那五串一个都不在）。这里按事实记一条，免得下次又当成「待确认接缝形状」。"
+    },
+    {
+      "file": "test/session-seal.mjs",
+      "shape": "no-arm",
+      "decision": "not-an-arm",
+      "present": [
+        "#!/usr/bin/env node"
+      ],
+      "absent": [
+        "--reverse",
+        "MUTANT",
+        "反证臂",
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "原单点名的 17 个之一 —— 事实上没有臂（它有一处叫 legacy-anchor 的日志路径，只是名字里有 anchor，不是臂）；absent 五串都不在。"
+    },
+    {
+      "file": "test/switch-perf-v21-v22.mjs",
+      "shape": "no-arm",
+      "decision": "not-an-arm",
+      "present": [
+        "#!/usr/bin/env node"
+      ],
+      "absent": [
+        "--reverse",
+        "MUTANT",
+        "反证臂",
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "原单点名的 17 个之一 —— 事实上没有臂（里面的 `arm` 是「量臂」即测量窗口 `window.__swArm`，不是反证臂）。"
+    },
+    {
+      "file": "test/tool-state-sync.mjs",
+      "shape": "no-arm",
+      "decision": "not-an-arm",
+      "present": [
+        "#!/usr/bin/env node"
+      ],
+      "absent": [
+        "--reverse",
+        "MUTANT",
+        "反证臂",
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "原单点名的 17 个之一 —— 事实上没有臂（absent 五串都不在）。"
+    },
+    {
+      "file": "test/v21-first-load-baseline.mjs",
+      "shape": "no-arm",
+      "decision": "not-an-arm",
+      "present": [
+        "#!/usr/bin/env node"
+      ],
+      "absent": [
+        "--reverse",
+        "MUTANT",
+        "反证臂",
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "原单点名的 17 个之一 —— 事实上没有臂（absent 五串都不在）。"
+    },
+    {
+      "file": "test/bash-default-timeout.mjs",
+      "shape": "flag-env-mutant",
+      "decision": "excluded",
+      "present": [
+        "--reverse-arm=no-default",
+        "SOPHO_BASH_TIMEOUT"
+      ],
+      "reason": "反证臂的全部变异就是**一个环境变量**：`SOPHO_BASH_TIMEOUT=off` ⇒ 插件 `bashTimeoutDefault()` 返回 null，缺省超时被拿掉（与「代码里没有这层」是同一个行为）；没有一串可拿去仓库里逐字找的 `from:`/`to:` 接缝。"
+    },
+    {
+      "file": "test/notify-stale-watchdog.mjs",
+      "shape": "flag-env-mutant（同文件里另有 5 条进扫描的 copy-patch 臂）",
+      "decision": "partial",
+      "present": [
+        "stale-ms-off",
+        "SOPHO_NOTIFY_STALE_ARM_MS",
+        "STALE_WATCHDOG_SEAM"
+      ],
+      "reason": "本文件有 6 条反证臂：①5 条 copy-patch 臂（`STALE_WATCHDOG_SEAM` / `SETTLE_ARM_SEAM` / `TIMING_SEAM` / `ONLY_ONCE_SEAM` / `RUNNING_GATE_SEAM`）都以 `{what,file,from,to}` 成对声明 ⇒ **进了扫描**（partial 要求的那 ≥1 条臂就是它们）；② `--reverse-arm=stale-ms-off` 的接缝是一个**环境变量**（`SOPHO_NOTIFY_STALE_ARM_MS=off`）—— 没有任何字节级的 `from:`/`to:` 可以拿去仓库里逐字找 ⇒ 进不了扫描，按 `partial` 记在这里（它红在 `notify:tree-stale-visible`）。"
+    },
+    {
+      "file": "test/long-message-overflow.mjs",
+      "shape": "flag-copy-patch",
+      "decision": "excluded",
+      "present": [
+        "startsWith('--reverse-arm=')",
+        "'no-image-width'",
+        "'no-break-rule'"
+      ],
+      "absent": [
+        "expectRed",
+        "anchor:"
+      ],
+      "reason": "两条臂都由 --reverse-arm=<名字> 驱动，改的是 web/ 的**副本**（test/harness.mjs 的 runGateOnMutatedCopy）：--reverse-arm=no-image-width 把 .message-body img { max-width: 100%; height: auto; } 那条规则整条删掉，--reverse-arm=no-break-rule 把 .message,.extra-message,.compaction-note 那条声明里的 overflow-wrap: anywhere 摘掉。接缝写在 mutate(copyRoot) 函数体里（一条正则 + 一个局部 const seam 整行串），不是 from:/to: 成对属性 ⇒ 进不了本门的抽臂扫描。"
+    }
+  ]
+}

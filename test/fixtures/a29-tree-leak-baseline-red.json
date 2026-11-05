@@ -1,0 +1,1438 @@
+{
+  "note": "A-29 树/泄漏门的**修前**基线原始样本（用于将来对照「修后必须绿」）。settleTrail/idleTrail 只保留尾部若干帧，其余字段原样。",
+  "producedBy": {
+    "commit": "2f73af1",
+    "branch": "landing/v2.2-perf-verify",
+    "command": "node test/a29-tree-leak.mjs --fixture-dir <fixture> --requests 10 --settle-ms 3000 --host-arm 3 --json <this file>",
+    "fixture": "test/tree-scale-fixture.mjs --sessions 320 --big-mib 24 --big-count 12（真 profile 只读复制 180 会话 + 140 合成；680 MiB）",
+    "machine": "Windows / Node v25.9.0",
+    "exitCode": 1
+  },
+  "events": [
+    {
+      "at": "2026-09-18T14:08:25.008Z",
+      "event": "fixture",
+      "home": "C:\\Users\\user\\AppData\\Local\\Temp\\sopho-a29-verify-fixture-big",
+      "sessionFiles": 320,
+      "corpusBytes": null,
+      "copiedReal": null,
+      "synthetic": null,
+      "reused": true,
+      "sandbox": "C:\\Users\\user\\AppData\\Local\\Temp\\sopho-tree-leak-nLvtBY"
+    },
+    {
+      "at": "2026-09-18T14:08:30.287Z",
+      "event": "sandbox_ready",
+      "hostPort": 60554,
+      "hostPid": 100460,
+      "workerPid": 936,
+      "workerPort": 60497,
+      "generationId": "g-1789740505234-1",
+      "workerOldSpaceMiB": null,
+      "heapLimitNote": "worker default heap unless --worker-old-space-mib"
+    },
+    {
+      "at": "2026-09-18T14:08:39.069Z",
+      "event": "full_cost_probe",
+      "aborted": false,
+      "statusCode": 200,
+      "sessions": 320,
+      "wallMs": 8393,
+      "responseMs": 7776,
+      "fullCostCpuMs": 5328.1,
+      "rssBeforeBytes": 146194432,
+      "rssPeakBytes": 293703680,
+      "idleTrail": [
+        {
+          "at": "2026-09-18T14:08:38.789Z",
+          "cpuMs": 9828.1,
+          "rssBytes": 293703680,
+          "rateMsPerSec": 0
+        },
+        {
+          "at": "2026-09-18T14:08:39.069Z",
+          "cpuMs": 9828.1,
+          "rssBytes": 293703680,
+          "rateMsPerSec": 0
+        }
+      ]
+    },
+    {
+      "at": "2026-09-18T14:08:47.577Z",
+      "event": "abandon_trail",
+      "aborted": true,
+      "effectiveAbortMs": 1500,
+      "responseMs": 1515,
+      "cpuAtAbortMs": 11062.5,
+      "cpuBurnAfterAbortMs": 3578.1,
+      "wallAfterAbortMs": 6961,
+      "cpuBeforeMs": 9828.1,
+      "cpuAfterIdleMs": 14640.6,
+      "idleTrail": [
+        {
+          "at": "2026-09-18T14:08:45.549Z",
+          "cpuMs": 13953.1,
+          "rssBytes": 319438848,
+          "rateMsPerSec": 874.8
+        },
+        {
+          "at": "2026-09-18T14:08:45.842Z",
+          "cpuMs": 14062.5,
+          "rssBytes": 310755328,
+          "rateMsPerSec": 437.6
+        },
+        {
+          "at": "2026-09-18T14:08:46.128Z",
+          "cpuMs": 14265.6,
+          "rssBytes": 318828544,
+          "rateMsPerSec": 812.4
+        },
+        {
+          "at": "2026-09-18T14:08:46.424Z",
+          "cpuMs": 14375,
+          "rssBytes": 319356928,
+          "rateMsPerSec": 437.6
+        },
+        {
+          "at": "2026-09-18T14:08:46.704Z",
+          "cpuMs": 14531.2,
+          "rssBytes": 322080768,
+          "rateMsPerSec": 624.8
+        },
+        {
+          "at": "2026-09-18T14:08:46.993Z",
+          "cpuMs": 14640.6,
+          "rssBytes": 322187264,
+          "rateMsPerSec": 437.6
+        },
+        {
+          "at": "2026-09-18T14:08:47.288Z",
+          "cpuMs": 14640.6,
+          "rssBytes": 322187264,
+          "rateMsPerSec": 0
+        },
+        {
+          "at": "2026-09-18T14:08:47.577Z",
+          "cpuMs": 14640.6,
+          "rssBytes": 322187264,
+          "rateMsPerSec": 0
+        }
+      ]
+    },
+    {
+      "at": "2026-09-18T14:08:52.280Z",
+      "event": "request",
+      "index": 1,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1505,
+      "wallMs": 4636,
+      "busyCpuMs": 1109.4,
+      "residualCpuMs": 2015.7,
+      "residualMaxRateMsPerSec": 1124.8,
+      "totalCpuMs": 3156.3,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:08:50.931Z",
+          "cpuMs": 17000,
+          "rssBytes": 370040832,
+          "rateMsPerSec": 1000
+        },
+        {
+          "at": "2026-09-18T14:08:51.227Z",
+          "cpuMs": 17156.2,
+          "rssBytes": 364597248,
+          "rateMsPerSec": 624.8
+        },
+        {
+          "at": "2026-09-18T14:08:51.504Z",
+          "cpuMs": 17296.9,
+          "rssBytes": 371597312,
+          "rateMsPerSec": 562.8
+        },
+        {
+          "at": "2026-09-18T14:08:51.788Z",
+          "cpuMs": 17484.4,
+          "rssBytes": 381452288,
+          "rateMsPerSec": 750
+        },
+        {
+          "at": "2026-09-18T14:08:52.063Z",
+          "cpuMs": 17671.9,
+          "rssBytes": 344350720,
+          "rateMsPerSec": 750
+        },
+        {
+          "at": "2026-09-18T14:08:52.273Z",
+          "cpuMs": 17796.9,
+          "rssBytes": 326152192,
+          "rateMsPerSec": 500
+        }
+      ],
+      "workerRssBeforeBytes": 322199552,
+      "workerRssAfterBytes": 338825216,
+      "workerRssAfterSettleBytes": 326152192,
+      "workerRssPeakSettleBytes": 381452288,
+      "hostRssBytesBefore": 322195456,
+      "hostHeapUsedBytesBefore": 110365744,
+      "hostRssBytesAfterRequest": 342724608,
+      "hostHeapUsedBytesAfterRequest": 154172024,
+      "hostRssBytesAfterSettle": 326488064,
+      "hostHeapUsedBytesAfterSettle": 121547448,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 6,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:08:56.949Z",
+      "event": "request",
+      "index": 2,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1516,
+      "wallMs": 4630,
+      "busyCpuMs": 1812.5,
+      "residualCpuMs": 3000,
+      "residualMaxRateMsPerSec": 1500,
+      "totalCpuMs": 4843.8,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:08:55.629Z",
+          "cpuMs": 21515.6,
+          "rssBytes": 372850688,
+          "rateMsPerSec": 1312.4
+        },
+        {
+          "at": "2026-09-18T14:08:55.924Z",
+          "cpuMs": 21875,
+          "rssBytes": 371224576,
+          "rateMsPerSec": 1437.6
+        },
+        {
+          "at": "2026-09-18T14:08:56.204Z",
+          "cpuMs": 22187.5,
+          "rssBytes": 394027008,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:08:56.487Z",
+          "cpuMs": 22390.6,
+          "rssBytes": 377556992,
+          "rateMsPerSec": 812.4
+        },
+        {
+          "at": "2026-09-18T14:08:56.770Z",
+          "cpuMs": 22562.5,
+          "rssBytes": 399839232,
+          "rateMsPerSec": 687.6
+        },
+        {
+          "at": "2026-09-18T14:08:56.942Z",
+          "cpuMs": 22671.9,
+          "rssBytes": 384110592,
+          "rateMsPerSec": 437.6
+        }
+      ],
+      "workerRssBeforeBytes": 329019392,
+      "workerRssAfterBytes": 357117952,
+      "workerRssAfterSettleBytes": 384110592,
+      "workerRssPeakSettleBytes": 420151296,
+      "hostRssBytesBefore": 326553600,
+      "hostHeapUsedBytesBefore": 121691800,
+      "hostRssBytesAfterRequest": 357851136,
+      "hostHeapUsedBytesAfterRequest": 191312568,
+      "hostRssBytesAfterSettle": 384110592,
+      "hostHeapUsedBytesAfterSettle": 166503904,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 7,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:01.612Z",
+      "event": "request",
+      "index": 3,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1505,
+      "wallMs": 4625,
+      "busyCpuMs": 1734.3,
+      "residualCpuMs": 3265.6,
+      "residualMaxRateMsPerSec": 1562.4,
+      "totalCpuMs": 5031.2,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:00.296Z",
+          "cpuMs": 26390.6,
+          "rssBytes": 358522880,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:09:00.578Z",
+          "cpuMs": 26671.9,
+          "rssBytes": 338776064,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:00.878Z",
+          "cpuMs": 27062.5,
+          "rssBytes": 342605824,
+          "rateMsPerSec": 1562.4
+        },
+        {
+          "at": "2026-09-18T14:09:01.175Z",
+          "cpuMs": 27343.8,
+          "rssBytes": 341114880,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:01.464Z",
+          "cpuMs": 27625,
+          "rssBytes": 346148864,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:01.605Z",
+          "cpuMs": 27703.1,
+          "rssBytes": 373964800,
+          "rateMsPerSec": 312.4
+        }
+      ],
+      "workerRssBeforeBytes": 388075520,
+      "workerRssAfterBytes": 328859648,
+      "workerRssAfterSettleBytes": 373964800,
+      "workerRssPeakSettleBytes": 373964800,
+      "hostRssBytesBefore": 384401408,
+      "hostHeapUsedBytesBefore": 167818416,
+      "hostRssBytesAfterRequest": 329142272,
+      "hostHeapUsedBytesAfterRequest": 70678056,
+      "hostRssBytesAfterSettle": 374435840,
+      "hostHeapUsedBytesAfterSettle": 159073672,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 7,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:06.272Z",
+      "event": "request",
+      "index": 4,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1506,
+      "wallMs": 4625,
+      "busyCpuMs": 1562.4,
+      "residualCpuMs": 3171.9,
+      "residualMaxRateMsPerSec": 1812.4,
+      "totalCpuMs": 4765.6,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:04.949Z",
+          "cpuMs": 30984.4,
+          "rssBytes": 378740736,
+          "rateMsPerSec": 812.8
+        },
+        {
+          "at": "2026-09-18T14:09:05.240Z",
+          "cpuMs": 31437.5,
+          "rssBytes": 338276352,
+          "rateMsPerSec": 1812.4
+        },
+        {
+          "at": "2026-09-18T14:09:05.531Z",
+          "cpuMs": 31703.1,
+          "rssBytes": 364797952,
+          "rateMsPerSec": 1062.4
+        },
+        {
+          "at": "2026-09-18T14:09:05.813Z",
+          "cpuMs": 31953.1,
+          "rssBytes": 379637760,
+          "rateMsPerSec": 1000
+        },
+        {
+          "at": "2026-09-18T14:09:06.095Z",
+          "cpuMs": 32250,
+          "rssBytes": 366899200,
+          "rateMsPerSec": 1187.6
+        },
+        {
+          "at": "2026-09-18T14:09:06.268Z",
+          "cpuMs": 32484.4,
+          "rssBytes": 358125568,
+          "rateMsPerSec": 937.6
+        }
+      ],
+      "workerRssBeforeBytes": 318291968,
+      "workerRssAfterBytes": 357527552,
+      "workerRssAfterSettleBytes": 358125568,
+      "workerRssPeakSettleBytes": 418549760,
+      "hostRssBytesBefore": 374435840,
+      "hostHeapUsedBytesBefore": 159249104,
+      "hostRssBytesAfterRequest": 358182912,
+      "hostHeapUsedBytesAfterRequest": 114771040,
+      "hostRssBytesAfterSettle": 359264256,
+      "hostHeapUsedBytesAfterSettle": 100769456,
+      "hostElapsedMsDuringStorm": 5,
+      "hostElapsedMsAfterSettle": 4,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:10.930Z",
+      "event": "request",
+      "index": 5,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1510,
+      "wallMs": 4623,
+      "busyCpuMs": 1656.2,
+      "residualCpuMs": 3093.7,
+      "residualMaxRateMsPerSec": 1687.6,
+      "totalCpuMs": 4781.2,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:09.650Z",
+          "cpuMs": 36000,
+          "rssBytes": 393105408,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:09.948Z",
+          "cpuMs": 36296.9,
+          "rssBytes": 415973376,
+          "rateMsPerSec": 1187.6
+        },
+        {
+          "at": "2026-09-18T14:09:10.247Z",
+          "cpuMs": 36578.1,
+          "rssBytes": 379314176,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:10.537Z",
+          "cpuMs": 36828.1,
+          "rssBytes": 388575232,
+          "rateMsPerSec": 1000
+        },
+        {
+          "at": "2026-09-18T14:09:10.820Z",
+          "cpuMs": 37078.1,
+          "rssBytes": 362291200,
+          "rateMsPerSec": 1000
+        },
+        {
+          "at": "2026-09-18T14:09:10.926Z",
+          "cpuMs": 37265.6,
+          "rssBytes": 398749696,
+          "rateMsPerSec": 750
+        }
+      ],
+      "workerRssBeforeBytes": 360800256,
+      "workerRssAfterBytes": 346230784,
+      "workerRssAfterSettleBytes": 398749696,
+      "workerRssPeakSettleBytes": 415973376,
+      "hostRssBytesBefore": 359264256,
+      "hostHeapUsedBytesBefore": 100938744,
+      "hostRssBytesAfterRequest": 347115520,
+      "hostHeapUsedBytesAfterRequest": 124732392,
+      "hostRssBytesAfterSettle": 400666624,
+      "hostHeapUsedBytesAfterSettle": 202023120,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 4,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:15.586Z",
+      "event": "request",
+      "index": 6,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1505,
+      "wallMs": 4622,
+      "busyCpuMs": 1562.5,
+      "residualCpuMs": 3250,
+      "residualMaxRateMsPerSec": 1750,
+      "totalCpuMs": 4812.5,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:14.316Z",
+          "cpuMs": 40703.1,
+          "rssBytes": 383139840,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:09:14.612Z",
+          "cpuMs": 41140.6,
+          "rssBytes": 393109504,
+          "rateMsPerSec": 1750
+        },
+        {
+          "at": "2026-09-18T14:09:14.906Z",
+          "cpuMs": 41421.9,
+          "rssBytes": 381857792,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:15.189Z",
+          "cpuMs": 41734.4,
+          "rssBytes": 398585856,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:09:15.484Z",
+          "cpuMs": 42031.2,
+          "rssBytes": 395579392,
+          "rateMsPerSec": 1187.2
+        },
+        {
+          "at": "2026-09-18T14:09:15.576Z",
+          "cpuMs": 42140.6,
+          "rssBytes": 402935808,
+          "rateMsPerSec": 437.6
+        }
+      ],
+      "workerRssBeforeBytes": 401555456,
+      "workerRssAfterBytes": 435957760,
+      "workerRssAfterSettleBytes": 402935808,
+      "workerRssPeakSettleBytes": 439656448,
+      "hostRssBytesBefore": 400859136,
+      "hostHeapUsedBytesBefore": 203901880,
+      "hostRssBytesAfterRequest": 437420032,
+      "hostHeapUsedBytesAfterRequest": 223788656,
+      "hostRssBytesAfterSettle": 372813824,
+      "hostHeapUsedBytesAfterSettle": 157598392,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 10,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:20.268Z",
+      "event": "request",
+      "index": 7,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1502,
+      "wallMs": 4644,
+      "busyCpuMs": 1828.1,
+      "residualCpuMs": 3218.7,
+      "residualMaxRateMsPerSec": 2062.4,
+      "totalCpuMs": 5109.3,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:18.980Z",
+          "cpuMs": 46078.1,
+          "rssBytes": 356532224,
+          "rateMsPerSec": 2062.4
+        },
+        {
+          "at": "2026-09-18T14:09:19.274Z",
+          "cpuMs": 46359.4,
+          "rssBytes": 353980416,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:19.556Z",
+          "cpuMs": 46640.6,
+          "rssBytes": 369410048,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:19.837Z",
+          "cpuMs": 46875,
+          "rssBytes": 393207808,
+          "rateMsPerSec": 937.6
+        },
+        {
+          "at": "2026-09-18T14:09:20.138Z",
+          "cpuMs": 47171.9,
+          "rssBytes": 348012544,
+          "rateMsPerSec": 1187.6
+        },
+        {
+          "at": "2026-09-18T14:09:20.262Z",
+          "cpuMs": 47328.1,
+          "rssBytes": 345743360,
+          "rateMsPerSec": 624.8
+        }
+      ],
+      "workerRssBeforeBytes": 383475712,
+      "workerRssAfterBytes": 423411712,
+      "workerRssAfterSettleBytes": 345743360,
+      "workerRssPeakSettleBytes": 444157952,
+      "hostRssBytesBefore": 373239808,
+      "hostHeapUsedBytesBefore": 163374088,
+      "hostRssBytesAfterRequest": 423411712,
+      "hostHeapUsedBytesAfterRequest": 212023112,
+      "hostRssBytesAfterSettle": 345743360,
+      "hostHeapUsedBytesAfterSettle": 101672040,
+      "hostElapsedMsDuringStorm": 7,
+      "hostElapsedMsAfterSettle": 6,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:24.933Z",
+      "event": "request",
+      "index": 8,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1512,
+      "wallMs": 4620,
+      "busyCpuMs": 1875,
+      "residualCpuMs": 3531.2,
+      "residualMaxRateMsPerSec": 1750,
+      "totalCpuMs": 5453.1,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:23.657Z",
+          "cpuMs": 51437.5,
+          "rssBytes": 368369664,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:09:23.945Z",
+          "cpuMs": 51750,
+          "rssBytes": 364507136,
+          "rateMsPerSec": 1250
+        },
+        {
+          "at": "2026-09-18T14:09:24.226Z",
+          "cpuMs": 52031.2,
+          "rssBytes": 367751168,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:24.506Z",
+          "cpuMs": 52437.5,
+          "rssBytes": 365465600,
+          "rateMsPerSec": 1625.2
+        },
+        {
+          "at": "2026-09-18T14:09:24.790Z",
+          "cpuMs": 52703.1,
+          "rssBytes": 367738880,
+          "rateMsPerSec": 1062.4
+        },
+        {
+          "at": "2026-09-18T14:09:24.929Z",
+          "cpuMs": 52890.6,
+          "rssBytes": 373051392,
+          "rateMsPerSec": 750
+        }
+      ],
+      "workerRssBeforeBytes": 349847552,
+      "workerRssAfterBytes": 376033280,
+      "workerRssAfterSettleBytes": 373051392,
+      "workerRssPeakSettleBytes": 426827776,
+      "hostRssBytesBefore": 345743360,
+      "hostHeapUsedBytesBefore": 106108376,
+      "hostRssBytesAfterRequest": 377610240,
+      "hostHeapUsedBytesAfterRequest": 114598080,
+      "hostRssBytesAfterSettle": 373051392,
+      "hostHeapUsedBytesAfterSettle": 137628704,
+      "hostElapsedMsDuringStorm": 4,
+      "hostElapsedMsAfterSettle": 4,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:29.587Z",
+      "event": "request",
+      "index": 9,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1511,
+      "wallMs": 4620,
+      "busyCpuMs": 1890.6,
+      "residualCpuMs": 3218.7,
+      "residualMaxRateMsPerSec": 1687.2,
+      "totalCpuMs": 5140.6,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:28.299Z",
+          "cpuMs": 56750,
+          "rssBytes": 367439872,
+          "rateMsPerSec": 1187.6
+        },
+        {
+          "at": "2026-09-18T14:09:28.595Z",
+          "cpuMs": 57093.8,
+          "rssBytes": 370089984,
+          "rateMsPerSec": 1375.2
+        },
+        {
+          "at": "2026-09-18T14:09:28.888Z",
+          "cpuMs": 57375,
+          "rssBytes": 376123392,
+          "rateMsPerSec": 1124.8
+        },
+        {
+          "at": "2026-09-18T14:09:29.182Z",
+          "cpuMs": 57640.6,
+          "rssBytes": 366215168,
+          "rateMsPerSec": 1062.4
+        },
+        {
+          "at": "2026-09-18T14:09:29.457Z",
+          "cpuMs": 57937.5,
+          "rssBytes": 369029120,
+          "rateMsPerSec": 1187.6
+        },
+        {
+          "at": "2026-09-18T14:09:29.583Z",
+          "cpuMs": 58062.5,
+          "rssBytes": 376819712,
+          "rateMsPerSec": 500
+        }
+      ],
+      "workerRssBeforeBytes": 346529792,
+      "workerRssAfterBytes": 358240256,
+      "workerRssAfterSettleBytes": 376819712,
+      "workerRssPeakSettleBytes": 420241408,
+      "hostRssBytesBefore": 373186560,
+      "hostHeapUsedBytesBefore": 143671072,
+      "hostRssBytesAfterRequest": 359530496,
+      "hostHeapUsedBytesAfterRequest": 135825496,
+      "hostRssBytesAfterSettle": 376819712,
+      "hostHeapUsedBytesAfterSettle": 158457992,
+      "hostElapsedMsDuringStorm": 3,
+      "hostElapsedMsAfterSettle": 4,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:34.242Z",
+      "event": "request",
+      "index": 10,
+      "aborted": true,
+      "statusCode": 0,
+      "sessions": null,
+      "bodyError": null,
+      "responseElapsedMs": 1513,
+      "wallMs": 4620,
+      "busyCpuMs": 1640.6,
+      "residualCpuMs": 3203.1,
+      "residualMaxRateMsPerSec": 2124.8,
+      "totalCpuMs": 4906.2,
+      "settleMs": 3000,
+      "settleTrail": [
+        {
+          "at": "2026-09-18T14:09:32.938Z",
+          "cpuMs": 61593.8,
+          "rssBytes": 359034880,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:33.225Z",
+          "cpuMs": 61843.8,
+          "rssBytes": 357224448,
+          "rateMsPerSec": 1000
+        },
+        {
+          "at": "2026-09-18T14:09:33.520Z",
+          "cpuMs": 62234.4,
+          "rssBytes": 367910912,
+          "rateMsPerSec": 1562.4
+        },
+        {
+          "at": "2026-09-18T14:09:33.801Z",
+          "cpuMs": 62578.1,
+          "rssBytes": 349650944,
+          "rateMsPerSec": 1374.8
+        },
+        {
+          "at": "2026-09-18T14:09:34.080Z",
+          "cpuMs": 62859.4,
+          "rssBytes": 352256000,
+          "rateMsPerSec": 1125.2
+        },
+        {
+          "at": "2026-09-18T14:09:34.235Z",
+          "cpuMs": 63000,
+          "rssBytes": 363700224,
+          "rateMsPerSec": 562.4
+        }
+      ],
+      "workerRssBeforeBytes": 379043840,
+      "workerRssAfterBytes": 371634176,
+      "workerRssAfterSettleBytes": 363700224,
+      "workerRssPeakSettleBytes": 389795840,
+      "hostRssBytesBefore": 376819712,
+      "hostHeapUsedBytesBefore": 158484552,
+      "hostRssBytesAfterRequest": 371634176,
+      "hostHeapUsedBytesAfterRequest": 146401368,
+      "hostRssBytesAfterSettle": 364834816,
+      "hostHeapUsedBytesAfterSettle": 140952176,
+      "hostElapsedMsDuringStorm": 3,
+      "hostElapsedMsAfterSettle": 7,
+      "hostPoolHot": 0,
+      "hostPoolCounters": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0,
+        "draining": false,
+        "maxHot": null,
+        "idleTTL": 900000,
+        "counters": {
+          "acquire": 0,
+          "restore": 0,
+          "evict": {
+            "ttl": 0,
+            "capacity": 0,
+            "memory": 0,
+            "stale_generation": 0,
+            "manual": 0
+          },
+          "disposeFailures": 0,
+          "lastDisposeError": null
+        }
+      },
+      "hostWorkerTotals": {
+        "hot": 0,
+        "cold": 0,
+        "active": 0,
+        "pinned": 0,
+        "loading": 0
+      },
+      "currentWorkerPid": 936,
+      "workerCount": 1,
+      "draining": 0
+    },
+    {
+      "at": "2026-09-18T14:09:42.344Z",
+      "event": "host_tree",
+      "index": 1,
+      "statusCode": 500,
+      "elapsedMs": 5011,
+      "bytes": 53,
+      "sessions": null,
+      "error": "The operation was aborted due to timeout",
+      "busyCpuMs": 5140.6,
+      "residualCpuMs": 1703.2,
+      "timedOut": true
+    },
+    {
+      "at": "2026-09-18T14:09:50.447Z",
+      "event": "host_tree",
+      "index": 2,
+      "statusCode": 500,
+      "elapsedMs": 5004,
+      "bytes": 53,
+      "sessions": null,
+      "error": "The operation was aborted due to timeout",
+      "busyCpuMs": 3218.7,
+      "residualCpuMs": 1343.8,
+      "timedOut": true
+    },
+    {
+      "at": "2026-09-18T14:09:58.567Z",
+      "event": "host_tree",
+      "index": 3,
+      "statusCode": 500,
+      "elapsedMs": 5018,
+      "bytes": 53,
+      "sessions": null,
+      "error": "The operation was aborted due to timeout",
+      "busyCpuMs": 3390.6,
+      "residualCpuMs": 1437.5,
+      "timedOut": true
+    },
+    {
+      "at": "2026-09-18T14:10:04.764Z",
+      "event": "single_session_guard",
+      "heapMiB": 256,
+      "sessionFileBytes": 15729571,
+      "statusCode": 503,
+      "error": "worker_memory_pressure",
+      "reason": "predicted_peak_exceeds_budget_after_reclaim",
+      "retryable": true,
+      "predictedPeakBytes": 260054296
+    }
+  ],
+  "checks": [
+    {
+      "id": "ARM-B-authenticated",
+      "ok": true,
+      "detail": "臂 B 必须能直连 worker（否则“被放弃”这件事根本没发生）；403 = token 算错，门本身就废了",
+      "evidence": {
+        "statusCode": 200,
+        "sessions": 320
+      }
+    },
+    {
+      "id": "FIXTURE-1-abort-actually-cuts-work",
+      "ok": true,
+      "detail": "放弃点必须真的把活切断：一发整树读的成本（5328.1 ms）须 ≥ 放弃点（1500 ms）+300 ms；否则是 fixture 太小 / 放弃点太大",
+      "evidence": {
+        "statusCode": 200,
+        "fullCostCpuMs": 5328.1,
+        "fullCostWallMs": 8393,
+        "effectiveAbortMs": 1500,
+        "abortAdjusted": false,
+        "sessions": 320
+      }
+    },
+    {
+      "id": "LEAK-1-abandoned-read-stops",
+      "ok": false,
+      "detail": "静默窗内最大 CPU 速率必须 ≤ 50 ms/s（噪声）；实测最坏 2124.8 ms/s",
+      "evidence": {
+        "thresholdMsPerSec": 50,
+        "worstResidualRateMsPerSec": 2124.8,
+        "settleMs": 3000,
+        "perWindowResidualCpuMs": [
+          2015.7,
+          3000,
+          3265.6,
+          3171.9,
+          3093.7,
+          3250,
+          3218.7,
+          3531.2,
+          3218.7,
+          3203.1
+        ],
+        "perWindowMaxRate": [
+          1124.8,
+          1500,
+          1562.4,
+          1812.4,
+          1687.6,
+          1750,
+          2062.4,
+          1750,
+          1687.2,
+          2124.8
+        ]
+      }
+    },
+    {
+      "id": "LEAK-2-per-request-cpu-capped",
+      "ok": false,
+      "detail": "每发总 CPU（忙 + 静默窗）必须 ≤ 2300 ms（min(放弃点+800, 全量成本-200)）；实测最坏 5453.1 ms（全量成本 5328.1 ms）",
+      "evidence": {
+        "costCapMs": 2300,
+        "effectiveAbortMs": 1500,
+        "fullCostCpuMs": 5328.1,
+        "perRequestTotalCpuMs": [
+          3156.3,
+          4843.8,
+          5031.2,
+          4765.6,
+          4781.2,
+          4812.5,
+          5109.3,
+          5453.1,
+          5140.6,
+          4906.2
+        ],
+        "perRequestBusyCpuMs": [
+          1109.4,
+          1812.5,
+          1734.3,
+          1562.4,
+          1656.2,
+          1562.5,
+          1828.1,
+          1875,
+          1890.6,
+          1640.6
+        ],
+        "perRequestResidualCpuMs": [
+          2015.7,
+          3000,
+          3265.6,
+          3171.9,
+          3093.7,
+          3250,
+          3218.7,
+          3531.2,
+          3218.7,
+          3203.1
+        ]
+      }
+    },
+    {
+      "id": "LEAK-3-rss-not-monotonic",
+      "ok": true,
+      "detail": "后半段 RSS 中位数 ≤ 前半段 ×1.5 + 128 MiB；实测 415973376 → 426827776",
+      "evidence": {
+        "firstHalfRssMedianBytes": 415973376,
+        "secondHalfRssMedianBytes": 426827776,
+        "rssSeriesBytes": [
+          381452288,
+          420151296,
+          373964800,
+          418549760,
+          415973376,
+          439656448,
+          444157952,
+          426827776,
+          420241408,
+          389795840
+        ],
+        "hostReportedRssAfterSettleBytes": [
+          326488064,
+          384110592,
+          374435840,
+          359264256,
+          400666624,
+          372813824,
+          345743360,
+          373051392,
+          376819712,
+          364834816
+        ],
+        "processRssAfterSettleBytes": [
+          326152192,
+          384110592,
+          373964800,
+          358125568,
+          398749696,
+          402935808,
+          345743360,
+          373051392,
+          376819712,
+          363700224
+        ],
+        "hostReportedHeapAfterSettleBytes": [
+          121547448,
+          166503904,
+          159073672,
+          100769456,
+          202023120,
+          157598392,
+          101672040,
+          137628704,
+          158457992,
+          140952176
+        ]
+      }
+    },
+    {
+      "id": "LEAK-4-host-still-answers",
+      "ok": true,
+      "detail": "洪峰中的 /host 必须 ≤ 3000 ms；实测最坏 7 ms",
+      "evidence": {
+        "worstHostElapsedMs": 7,
+        "series": [
+          4,
+          4,
+          4,
+          5,
+          4,
+          4,
+          7,
+          4,
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "LEAK-6-pool-does-not-accumulate",
+      "ok": true,
+      "detail": "整树读不该在池里留下 hot/active/loading：last={\"hot\":0,\"cold\":0,\"active\":0,\"pinned\":0,\"loading\":0}（first={\"hot\":0,\"cold\":0,\"active\":0,\"pinned\":0,\"loading\":0}）",
+      "evidence": {
+        "firstWorkerTotals": {
+          "hot": 0,
+          "cold": 0,
+          "active": 0,
+          "pinned": 0,
+          "loading": 0
+        },
+        "lastWorkerTotals": {
+          "hot": 0,
+          "cold": 0,
+          "active": 0,
+          "pinned": 0,
+          "loading": 0
+        },
+        "lastPool": {
+          "hot": 0,
+          "cold": 0,
+          "active": 0,
+          "pinned": 0,
+          "loading": 0,
+          "draining": false,
+          "maxHot": null,
+          "idleTTL": 900000,
+          "counters": {
+            "acquire": 0,
+            "restore": 0,
+            "evict": {
+              "ttl": 0,
+              "capacity": 0,
+              "memory": 0,
+              "stale_generation": 0,
+              "manual": 0
+            },
+            "disposeFailures": 0,
+            "lastDisposeError": null
+          }
+        },
+        "workerCount": 1,
+        "draining": 0
+      }
+    },
+    {
+      "id": "LEAK-5-host-timeout-stops-worker",
+      "ok": false,
+      "detail": "宿主 5 s 超时放弃的那几发，残留 CPU 必须 ≤ 500 ms；实测 1703.2, 1343.8, 1437.5",
+      "evidence": {
+        "timedOut": 3,
+        "residualCpuMs": [
+          1703.2,
+          1343.8,
+          1437.5
+        ],
+        "residualCapMs": 500,
+        "statusCodes": [
+          500,
+          500,
+          500
+        ],
+        "errors": [
+          "The operation was aborted due to timeout",
+          "The operation was aborted due to timeout",
+          "The operation was aborted due to timeout"
+        ]
+      }
+    },
+    {
+      "id": "GUARD-1-single-session-still-503",
+      "ok": true,
+      "detail": "单条装不下的会话仍须 503 worker_memory_pressure；实测 503 worker_memory_pressure",
+      "evidence": {
+        "heapMiB": 256,
+        "sessionFileBytes": 15729571,
+        "statusCode": 503,
+        "error": "worker_memory_pressure",
+        "reason": "predicted_peak_exceeds_budget_after_reclaim",
+        "retryable": true,
+        "predictedPeakBytes": 260054296
+      }
+    }
+  ]
+}

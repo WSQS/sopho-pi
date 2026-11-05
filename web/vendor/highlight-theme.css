@@ -1,0 +1,20 @@
+/* web/vendor/highlight-theme.css —— highlight.js v11 的 token 配色（本仓自写，不是上游整份主题）。
+   为什么自己写：highlight.min.js 里没有 CSS；上游主题（atom-one-dark.css 等）约 1.3–1.4 KB，
+   大半是 hljs v9/v10 的旧类名和本仓从不生成的类。这里只保留 hljs v11 会产生的 token 类。
+   颜色取自 pi 自带 dark.json 的 syntax*（配 #0b0c0f 深底可读）。换主题只改这一份。
+   只作用于代码块的 hljs span：本仓正文其它地方不会产生 .hljs* 类。 */
+.hljs { background: transparent; color: #c7c9cf; }
+.hljs-comment, .hljs-quote { color: #6a9955; }
+.hljs-keyword, .hljs-selector-tag { color: #569cd6; }
+.hljs-number, .hljs-literal { color: #b5cea8; }
+.hljs-string, .hljs-doctag { color: #ce9178; }
+/* hljs v11 用 .hljs-title.function_ 复合类表示函数名 */
+.hljs-function, .hljs-title, .hljs-title.function_, .hljs-section, .hljs-name { color: #dcdcaa; }
+/* hljs v11 用 .hljs-title.class_ 复合类表示类名 */
+.hljs-type, .hljs-class, .hljs-title.class_, .hljs-built_in { color: #4ec9b0; }
+.hljs-attr, .hljs-variable, .hljs-variable.language_, .hljs-params, .hljs-property { color: #9cdcfe; }
+.hljs-meta, .hljs-meta .hljs-keyword, .hljs-meta .hljs-string { color: #569cd6; }
+.hljs-operator, .hljs-punctuation { color: #d4d4d4; }
+.hljs-subst { color: #c7c9cf; }
+.hljs-addition { color: #7bc47f; }
+.hljs-deletion { color: #e06868; }

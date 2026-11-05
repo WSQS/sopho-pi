@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  sopho 应用图标 · A4「几何状态槽＋对话气泡」**前景层**（adaptive icon 的 foreground）。
+
+  来源（唯一母版，不重新描摹、不改比例、不加字/节点/反光）：
+    `web/brand/sopho-app-icon-a4.svg`
+    SHA-256 20eff8cfb80909e915e1db2ad717f49efe71c01c5371aabaf884f5c2011c4122
+    （原始出处 wt/a-d2e76838 @ 6d2828502142d41cb01082731d674d4d14dee086 的
+      items/app-icon/prototypes/a4-slot-bubble-geometric.svg，字节相同）
+
+  两处**纯机械**的换算（图形本身一个坐标都没动）：
+    1. 母版里的 <rect rx> 在 vector drawable 里只能写成 <path>（VD 没有 rect 元素）：
+       rect(x,y,w,h,rx) → 直线＋四段 `A rx,ry` 圆弧。第一块 rx = w/2，所以两条直边长度为 0
+       （端头是全圆，与母版同形），直接省略退化的 L 段。
+    2. 母版 1024 坐标系整体放进 adaptive icon 的 108dp 视口要做**等比缩放**（见下方 <group>）。
+       缩放/平移是唯一允许的变换；路径数字与母版保持一致（单位仍是 1024 空间的坐标）。
+
+  为什么缩到 60×36dp：adaptive icon 的**安全区是 66dp 圆**（72dp 可见方形里再内缩 3dp）。
+  A4 前景真实包围盒 640×384（中心 512,512）在最坏方向上的半径是 350.2167（圆角算进去，
+  不是尖角 373.1809）。等比 0.09375 = 3/32 ⇒ 前景盒 640×384 → **60.0×36.0dp，居中（平移 6dp）**，
+  最大半径 32.833dp ⇒ 落在 33dp 安全半径内（余量 0.167dp），距离任何 72dp 圆／圆角／方角遮罩的
+  实际裁切边（半径 36dp）还有 3.167dp。槽端头与气泡尾的平口都完整，见
+  docs/ops/sopho-app-icon-a4.md 的实测。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 等比 3/32 ＋ 平移 6dp（= 54 − 512×3/32），把 1024 空间的中心 (512,512) 放到视口中心 (54,54)。
+         VD 的 group 变换是 x' = x·scale + translate（pivot 取 0），所以 x=192→24、832→84、y=320→36、704→72。 -->
+    <group
+        android:scaleX="0.09375"
+        android:scaleY="0.09375"
+        android:translateX="6"
+        android:translateY="6">
+        <!-- 母版 #fg 第 1 块：竖槽 rect(192,320,128,384,rx=64)（端头全圆） -->
+        <path
+            android:fillColor="#8abeb7"
+            android:pathData="M256,320 A64,64 0 0 1 320,384 L320,640 A64,64 0 0 1 256,704 A64,64 0 0 1 192,640 L192,384 A64,64 0 0 1 256,320 Z" />
+        <!-- 母版 #fg 第 2 块：气泡 rect(448,320,384,320,rx=64) -->
+        <path
+            android:fillColor="#8abeb7"
+            android:pathData="M512,320 L768,320 A64,64 0 0 1 832,384 L832,576 A64,64 0 0 1 768,640 L512,640 A64,64 0 0 1 448,576 L448,384 A64,64 0 0 1 512,320 Z" />
+        <!-- 母版 #fg 第 3 块：尾巴（平口短尾，母版里本来就是 path，逐字照抄） -->
+        <path
+            android:fillColor="#8abeb7"
+            android:pathData="M 512 624 L 640 624 L 576 704 L 512 704 Z" />
+    </group>
+</vector>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sopho-pi · 设计器（画布与编辑）</title>
+  <link rel="icon" type="image/svg+xml" href="/brand/sopho-app-icon-a4.svg">
+  <link rel="stylesheet" href="/slot.css">
+  <link rel="stylesheet" href="/designer.css">
+</head>
+<body class="dz-page">
+  <!--
+    设计器 · B 半：**画布与编辑 UI**。
+    · 文档形状 = 冻结接口 v0（`web/designer.js` 顶部把整份契约逐字写着）；
+    · 渲染引擎 = **真浏览器**（元素就是 DOM：row/column 走 flex、grid 走 grid、fill 靠 flex-grow/stretch）；
+    · **箭头由数据生成**：`transitions` 是唯一来源，画布上的箭头只是它的视图（不许手绘）；
+    · 起点**空白**，**不存服务端**：导出/导入 JSON 就够（这样也不用新增路由 / reload）。
+  -->
+  <header class="dz-topbar">
+    <h1 class="dz-title">设计器<span class="dz-title-dim">画布与编辑</span></h1>
+    <div class="dz-toolbar" role="toolbar" aria-label="文档">
+      <button type="button" class="dz-btn" id="dz-new" title="从空白开始（清掉当前文档，可撤销）">新建</button>
+      <button type="button" class="dz-btn" id="dz-export" title="把当前文档下载成 .json">导出 JSON</button>
+      <button type="button" class="dz-btn" id="dz-copy" title="把当前文档的 JSON 复制到剪贴板">复制 JSON</button>
+      <label class="dz-btn dz-file" for="dz-import" title="读一份 .json 覆盖当前文档（可撤销）">导入 JSON</label>
+      <!-- ── 导出 ▾：一次导出**当场重跑**（不是把旧稿再发一次），失败**如实报**（见 designer.js 的 runExport / [SEAM:export-guard]）──
+           只列**做得到**的那几件；做得到的都在这里，做不到的不摆。 -->
+      <div class="dz-menu" id="dz-export-menu">
+        <button type="button" class="dz-btn" id="dz-export-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="dz-export-items" title="把这份设计导出成文件（每次导出都当场重跑）">导出 ▾</button>
+        <div class="dz-menu-items" id="dz-export-items" role="menu" aria-labelledby="dz-export-toggle" hidden>
+          <button type="button" class="dz-menu-item" role="menuitem" data-export="html">HTML<span class="dz-menu-note">当前屏 · 静态页 · 零外部请求</span></button>
+          <button type="button" class="dz-menu-item" role="menuitem" data-export="svg">SVG<span class="dz-menu-note">当前屏 · 矢量图 · 几何是实测的</span></button>
+          <button type="button" class="dz-menu-item" role="menuitem" data-export="png">PNG<span class="dz-menu-note">当前屏 · 位图 · 由那份 SVG 光栅化</span></button>
+          <button type="button" class="dz-menu-item" role="menuitem" data-export="json">规范 JSON<span class="dz-menu-note">整份文档 · 与「导出 JSON」同一串字节</span></button>
+          <button type="button" class="dz-menu-item" role="menuitem" data-export="flow">转移图（SVG）<span class="dz-menu-note">整份文档 · 箭头只由 transitions 生成</span></button>
+        </div>
+      </div>
+      <input type="file" id="dz-import" accept="application/json,.json" hidden>
+    </div>
+    <div class="dz-toolbar" role="toolbar" aria-label="历史">
+      <button type="button" class="dz-btn" id="dz-undo" title="撤销（Ctrl+Z）" disabled>撤销</button>
+      <button type="button" class="dz-btn" id="dz-redo" title="重做（Ctrl+Shift+Z）" disabled>重做</button>
+    </div>
+    <div class="dz-toolbar" role="toolbar" aria-label="视图">
+      <button type="button" class="dz-btn" id="dz-view-edit" aria-pressed="true">编辑屏</button>
+      <button type="button" class="dz-btn" id="dz-view-flow" aria-pressed="false">流程 / 箭头</button>
+      <button type="button" class="dz-btn" id="dz-preview-open" title="用同一份文档渲染一份静态、零外部请求的预览">预览</button>
+    </div>
+    <p class="dz-status" id="dz-status" role="status" aria-live="polite">空白文档</p>
+  </header>
+
+  <main class="dz-body">
+    <!-- ── 左：元素工具 ＋ 屏/状态 ＋ 图层 ＋ 转移（都是数据的视图）──────────────────────── -->
+    <aside class="dz-left" aria-label="结构">
+      <section class="dz-block">
+        <h2 class="dz-h2">元素（拖到画布，或点一下）</h2>
+        <div class="dz-tools" id="dz-tools" role="group" aria-label="元素工具">
+          <button type="button" class="dz-tool" data-tool="container" title="容器（可装子元素，有布局语义）">容器</button>
+          <button type="button" class="dz-tool" data-tool="rect" title="矩形">矩形</button>
+          <button type="button" class="dz-tool" data-tool="text" title="文本">文本</button>
+          <button type="button" class="dz-tool" data-tool="image" title="图片（占位图是内联 data URI ⇒ 零请求）">图片</button>
+          <button type="button" class="dz-tool" data-tool="input" title="输入框">输入</button>
+          <button type="button" class="dz-tool" data-tool="button" title="按钮">按钮</button>
+          <button type="button" class="dz-tool" data-tool="divider" title="分割符（一条可拉伸的分隔：长边跟着容器伸展，短边就是粗细；不是画上去的一条线）">分割符</button>
+        </div>
+        <p class="dz-hint">拖到画布上的位置就是它的落点；只点一下则落在当前选中的容器里（级联错开）。</p>
+      </section>
+
+      <section class="dz-block">
+        <h2 class="dz-h2">屏<span class="dz-count" id="dz-screen-count"></span></h2>
+        <div class="dz-list" id="dz-screens" role="listbox" aria-label="屏"></div>
+        <div class="dz-inline">
+          <button type="button" class="dz-btn dz-btn-sm" id="dz-add-screen">＋ 屏</button>
+          <button type="button" class="dz-btn dz-btn-sm" id="dz-del-screen">删掉这屏</button>
+        </div>
+      </section>
+
+      <section class="dz-block">
+        <h2 class="dz-h2">状态（同一屏的变体）<span class="dz-count" id="dz-state-count"></span></h2>
+        <div class="dz-list" id="dz-states" role="listbox" aria-label="状态"></div>
+        <div class="dz-inline">
+          <button type="button" class="dz-btn dz-btn-sm" id="dz-add-state">＋ 状态</button>
+          <button type="button" class="dz-btn dz-btn-sm" id="dz-del-state">删掉这个状态</button>
+        </div>
+      </section>
+
+      <section class="dz-block dz-grow">
+        <h2 class="dz-h2">图层（当前状态）</h2>
+        <div class="dz-list dz-layers" id="dz-layers" role="listbox" aria-label="图层"></div>
+      </section>
+    </aside>
+
+    <!-- ── 中：画布（编辑屏）／流程（箭头由 transitions 生成）──────────────────────────── -->
+    <section class="dz-center" aria-label="画布">
+      <div class="dz-canvas" id="dz-canvas">
+        <div class="dz-frame" id="dz-frame" data-drop="canvas"></div>
+      </div>
+      <div class="dz-flow" id="dz-flow" hidden>
+        <svg class="dz-arrows" id="dz-arrows" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <marker id="dz-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#8abeb7"></path>
+            </marker>
+          </defs>
+        </svg>
+        <div class="dz-flow-bar">
+          <button type="button" class="dz-btn dz-flow-add" id="dz-flow-add-transition" title="填一张表单：从哪屏/哪状态 → 到哪屏/哪状态、触发是什么">＋ 添加转移</button>
+          <span class="dz-flow-hint">箭头不是画上去的：点「＋ 添加转移」填一张表单，或直接点画布上的箭头改它 / 删它。</span>
+          <!-- 自由缩放（滚轮直接放大/缩小）；按钮是没有滚轮时的退路，也是回到 100% 的手段 -->
+          <span class="dz-flow-zoom" role="group" aria-label="缩放画布">
+            <button type="button" class="dz-btn dz-btn-sm" id="dz-flow-zoom-out" title="缩小（滚轮向下也可以）" aria-label="缩小">−</button>
+            <span class="dz-flow-zoom-level" id="dz-flow-zoom-level" data-zoom="1" aria-live="polite" title="当前缩放：滚轮缩放，或点「重置」回到 100%">100%</span>
+            <button type="button" class="dz-btn dz-btn-sm" id="dz-flow-zoom-in" title="放大（滚轮向上也可以）" aria-label="放大">＋</button>
+            <button type="button" class="dz-btn dz-btn-sm" id="dz-flow-zoom-reset" title="回到 100%">重置</button>
+          </span>
+        </div>
+        <p class="dz-flow-empty" id="dz-flow-empty">还没有转移：点「＋ 添加转移」选一个屏。</p>
+        <!-- 兜底（不许静默）：有转移指不到「屏 · 状态」节点时在这里点名说清（正常路径上校验已经拒收） -->
+        <p class="dz-flow-warn" id="dz-flow-warn" role="status" hidden></p>
+        <div class="dz-flow-cards" id="dz-flow-cards"></div>
+        <p class="dz-flow-note">箭头<strong>只</strong>由文档里的 <code>transitions</code> 生成 —— 画布上画不出一根「数据里没有」的箭头。</p>
+      </div>
+    </section>
+
+    <!-- ── 右：属性面板（改哪一格，画布当场变）────────────────────────────────────────── -->
+    <aside class="dz-right" aria-label="属性">
+      <div class="dz-block dz-grow">
+        <h2 class="dz-h2">属性<span class="dz-count" id="dz-selection-count"></span></h2>
+        <p class="dz-note" id="dz-panel-note">未选中元素。</p>
+        <div class="dz-panel" id="dz-panel"></div>
+      </div>
+      <div class="dz-block dz-block-top">
+        <h2 class="dz-h2">转移（箭头的数据）<span class="dz-count" id="dz-transition-count"></span></h2>
+        <div class="dz-transitions" id="dz-transitions"></div>
+        <div class="dz-inline">
+          <button type="button" class="dz-btn dz-btn-sm" id="dz-add-transition">＋ 转移</button>
+        </div>
+        <p class="dz-note">箭头是 <code>transitions</code> 的<strong>视图</strong>：改它 = 改数据，删它 = 删数据。</p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="dz-preview" id="dz-preview" hidden>
+    <header class="dz-preview-bar">
+      <strong>预览</strong>
+      <span id="dz-preview-summary" class="dz-preview-summary"></span>
+      <span class="dz-preview-flag">静态 · 零外部请求</span>
+      <button type="button" class="dz-btn" id="dz-preview-close">关掉</button>
+    </header>
+    <div class="dz-preview-stage" id="dz-preview-stage" data-static="true"></div>
+  </div>
+
+  <div class="dz-tform" id="dz-tform" hidden role="dialog" aria-modal="true" aria-labelledby="dz-tform-title">
+    <div class="dz-tform-box">
+      <h2 id="dz-tform-title">添加转移</h2>
+      <p class="dz-tform-lead">一根箭头 = <code>transitions</code> 里的一条数据。填完点「确定」，画布上立刻出现它；点箭头就能回来改同一张表单。</p>
+      <div class="dz-tform-row">
+        <span class="dz-tform-label">从</span>
+        <select id="dz-tform-from-screen" data-field="from-screen" aria-label="从：屏"></select>
+        <select id="dz-tform-from-state" data-field="from-state" aria-label="从：状态"></select>
+      </div>
+      <div class="dz-tform-row">
+        <span class="dz-tform-label">到</span>
+        <select id="dz-tform-to-screen" data-field="to-screen" aria-label="到：屏"></select>
+        <select id="dz-tform-to-state" data-field="to-state" aria-label="到：状态"></select>
+      </div>
+      <div class="dz-tform-row">
+        <span class="dz-tform-label">触发</span>
+        <input type="text" id="dz-tform-trigger" data-field="trigger" placeholder="一句话，比如「点提交」" aria-label="触发">
+      </div>
+      <p class="dz-tform-error" id="dz-tform-error" role="alert"></p>
+      <div class="dz-tform-actions">
+        <button type="button" class="dz-btn dz-tform-del" id="dz-tform-delete" hidden>删掉这条</button>
+        <button type="button" class="dz-btn" id="dz-tform-cancel">取消</button>
+        <button type="button" class="dz-btn dz-tform-ok" id="dz-tform-ok">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 复制 JSON 的**手动框**（三级降级的第 ③ 级）：非安全上下文（HTTPS / localhost 之外的局域网 IP ＋
+       明文 HTTP）里浏览器不提供剪贴板 API，兼容路径也可能被拒 —— 到这里就把导出串全选好交出去，
+       业主按 Ctrl+C 就行（**绝不留「复制失败」的死胡同**）。为什么 / 怎么办由 `designer.js` 如实写进去。 -->
+  <div class="dz-copy" id="dz-copy-panel" hidden role="dialog" aria-modal="true" aria-labelledby="dz-copy-title">
+    <div class="dz-copy-box">
+      <h2 id="dz-copy-title">复制 JSON · 手动复制</h2>
+      <p class="dz-copy-lead" id="dz-copy-lead"></p>
+      <p class="dz-copy-why" id="dz-copy-why"></p>
+      <textarea class="dz-copy-text" id="dz-copy-text" readonly spellcheck="false" aria-label="导出串（已全选，按 Ctrl+C 复制）"></textarea>
+      <div class="dz-copy-actions">
+        <button type="button" class="dz-btn" id="dz-copy-close" title="收起来（Esc）">关掉（Esc）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 三级降级的**唯一一份**实现（主产品页 `index.html` 引的也是它；本页原先就在这里就地实现过一份）。
+       经典脚本：在下面的 module 脚本之前同步执行。 -->
+  <script src="/copy-text.js"></script>
+  <script type="module" src="/designer.js"></script>
+</body>
+</html>

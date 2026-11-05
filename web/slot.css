@@ -1,0 +1,243 @@
+:root {
+  --slot-idle: #4d5058;
+  --slot-working: #7bc47f;
+  --slot-unread: #d65d5d;
+  --slot-dark: #292b31;
+  --slot-user: #8abeb7;
+  --slot-assistant: #c7c9cf;
+  --slot-pending: #7f9baf;
+  --slot-success: #7bc47f;
+  --slot-error: #e06868;
+  --slot-warning: #d8b45a;
+  --slot-extra: #9b79b8;
+  /* bash 块（用户发起的 `!` 命令）：与 user/assistant/tool 各自的槽色都不同（业主 2026-09-22：
+     类型三分之外再把 bash 单列一色）。同一条槽原语、同一个 token 体系，不另开一套调色板。 */
+  --slot-bash: #cf8a5f;
+}
+
+/* v2.2 的共享原语：每个有视觉边界的 UI 元素只提供 --slot 语义色，
+   这一条规则统一画出贴最左、占满元素高度的 3px 槽。
+   ⚠️ 槽宽（3px）这一层**不手写**：它是规格文档 spec/screens/settings-overlay.md 的 G-09 · G-23，
+   由 bin/gen-design-values.mjs 生成成 `--design-slot-width`（web/generated/design-values.css），
+   这里从它取值；生成物拿不到时降级成原来的 3px（与铺这一层之前逐字相同）。
+   用户方向书 2026-09-17 明定会话行是「一行只有最左侧一个槽」：
+   fold/select 是行内实现按钮，不再各吃一条槽；这是「所有元素都加槽」的具体例外。
+   data-slot="off" 是逐元素撤销开关，后续不必拆组件样式 —— 它必须待在 `@layer` 里，见下面那条。 */
+button:not(.fold-toggle):not(.tree-select):not(.tool-toggle):not(.thinking-toggle):not(.bash-toggle):not(.tool-args-toggle):not(.tool-copy),
+input,
+textarea,
+.tree-nav h1,
+#new-session-toggle,
+.new-session-label,
+.new-session button,
+.new-session input,
+.device-panel h2,
+.device,
+.tree-session,
+.attic-toggle,
+.attic-heading,
+.tree-connection,
+.tree-settings,
+#session-title,
+#archive,
+#rename,
+#export,
+#compact,
+#abort,
+#session-cwd,
+#session-usage,
+#session-context,
+#session-connection,
+#compact-confirm,
+#delete-confirm,
+#settings-panel,
+#queue-status,
+#session-notice,
+#questions-notice,
+#debug-notice,
+#debug-scope,
+.question-item,
+.debug-item,
+.message,
+.tool-card,
+.bash-card,
+.extra-message,
+.compaction-note,
+.command-palette-item,
+.command-palette-note,
+.mention-palette-item,
+.mention-palette-note,
+#prompt,
+#send,
+#notice {
+  border-inline-start: var(--design-slot-width, 3px) solid var(--slot, var(--slot-idle)) !important;
+}
+
+/* 逐元素撤销开关：被它命中的元素不吃上面那一条槽。
+   ⚠️ 它**必须**待在 `@layer` 里 —— 上面那条原语是**未分层**的 `!important`，而按级联层规则，
+   **分层里的 `!important` 压过未分层的 `!important`**（important 一侧的层序与普通声明相反，
+   未分层排在最后 ⇒ 最弱）。所以换层之后这条与**特异性完全无关**，名单里每一个元素都关得掉。
+   裸规则会怎样（2026-09-27 实测，改动前就是这样）：它只有 (0,1,0)，而上面那条名单里
+   `button:not(…)×7` 是 (0,7,1)、`#send` 这类 id 选择器是 (1,0,0)；两条都是 `!important` 时
+   **按特异性判** ⇒ 开关在按钮与 id 命中的元素上失效 —— `web/index.html` 里真写着 `data-slot="off"` 的
+   `#session-notice-close` / `#suggestions-close`，实测 `border-inline-start-width` **仍是 3px**
+   （只有 `input` 碰巧能赢：`input` 那条选择器才 (0,0,1)，所以这个 bug 一直被那两个 x 按钮掩盖）。
+   真 Chromium 的三组对照读数（同一页）：
+     · 裸规则 + `#send[data-slot=off]`（1,0,0）  ⇒ 3px（压不过）
+     · 分层规则 + `#send[data-slot=off]`      ⇒ 0px（压过）
+     · 分层规则 + `input[data-slot=off]`     ⇒ 0px（本来就 0，不回退）
+   反证臂 `slot-off-layer-dropped`（`test/designer-ui.mjs`）就是把这一层拿掉 ⇒ `slot:off-switch` 必红。 */
+@layer slot-off {
+  [data-slot="off"] {
+    border-inline-start-width: 0 !important;
+  }
+}
+
+/* 左栏有 6 个固定职责的直接子项；显隐不能靠 auto-placement 猜行号。
+   设备/新建面板隐藏时，对应 auto 行自然收成 0；树永远独占 minmax 行，**底栏**（连接状态 + 配置页入口
+   合成的 `.tree-footer`）永远压底。
+   这避免窄屏最挤组合里 device-panel 与 #tree 被排进同一格而真相交。 */
+aside.tree { grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; }
+.tree-nav { grid-row: 1; }
+#new-session-panel { grid-row: 2; }
+#tree-search { grid-row: 3; }
+#device-panel { grid-row: 4; }
+#tree { grid-row: 5; }
+.tree-footer { grid-row: 6; }
+@media (max-width: 720px) {
+  aside.tree {
+    overflow-y: auto;
+    grid-template-rows: auto auto auto auto minmax(108px, 1fr) auto;
+  }
+  /* 展开后两棵树各分到至少 54px：26px 栏头 + 26px 首行都完整可见。 */
+  #tree { min-height: 108px; }
+}
+
+/* 会话行：状态只由槽表达；旧圆点保留在 DOM 兼容并行渲染契约，但不再可见。 */
+.tree-session { --slot: var(--slot-idle); }
+/* 选中行：v2.1 靠 box-shadow 打左细线表达 active，v2.2 禁阴影与渐变，
+   所以改用常驻 background + 亮文字色。槽位仍留给状态（不许被选中态吃掉）。
+   这条在 index.html 的 :hover 之后生效（slot.css 后注入），选中行悬停也保持高亮。 */
+.tree-session.selected { background: #1e222b; color: var(--bright); }
+.tree-session.status-working { --slot: var(--slot-working); }
+/* I-56（用户 2026-09-19 裁定）：会话行只有一个槽位，**在跑优先于未读**。
+   在跑时「它在动」比「有新东西」更该被看见；这一轮落定、`status` 不再是 `working`
+   之后，未读色自然接管（`server/base.mjs` 的 status 就是 working > unread > idle）。
+   `:not(.status-working)` 让下面两条在「两个状态同时为真」（在跑且未读）时**不匹配**，
+   于是优先级来自选择器本身，而不是「谁的规则写在后面」——同名特异性下的先后很容易被
+   下一次编辑无声地推翻。
+   注：`.tree-session.archived` 仍排在最后（归档行是暗档）—— 归档优先于未读是既有口径
+   （`web/render.js` 的 unread 记号也只给非归档分支），I-56 只改「在跑 vs 未读」这一对。 */
+.tree-session.status-unread:not(.status-working),
+.tree-session.unread:not(.status-working) { --slot: var(--slot-unread); }
+.tree-session.archived { --slot: var(--slot-dark); }
+.status-dot { display: none; }
+.tree-select { grid-template-columns: minmax(0, 1fr) auto; }
+
+/* 消息类型与工具四态。用户取现有 accent；助手取现有正文 text。 */
+.message-user { --slot: var(--slot-user); }
+/* 「我刚发出的那条」还在 pi 的队列里（还没进模型上下文）—— 等待态，与 #queue-status 同一语义色。 */
+.message-user[data-pending="queued"] { --slot: var(--slot-warning); }
+.message-assistant,
+.live-message { --slot: var(--slot-assistant); }
+.tool-card[data-state="running"] { --slot: var(--slot-pending); }
+.tool-card[data-state="done-success"] { --slot: var(--slot-success); }
+.tool-card[data-state="done-error"] { --slot: var(--slot-error); }
+.tool-card[data-state="unfinished"],
+.tool-card[data-state="interrupted"] { --slot: var(--slot-warning); }
+.bash-card { --slot: var(--slot-bash); }
+.extra-message,
+.compaction-note { --slot: var(--slot-extra); }
+
+/* 操作与输入：默认中性；主操作、危险操作、焦点、禁用分别覆盖语义。 */
+button,
+input,
+textarea { --slot: var(--slot-idle); }
+#send,
+#new-project,
+#new-scratch,
+#advanced-session button[type="submit"] { --slot: var(--slot-user); }
+#compact { --slot: var(--slot-warning); }
+#compact-confirm { --slot: var(--slot-warning); }
+#compact-confirm-yes { --slot: var(--slot-warning); }
+#abort { --slot: var(--slot-error); }
+button:disabled,
+input:disabled,
+textarea:disabled { --slot: var(--slot-dark); }
+input:focus:not(:disabled),
+textarea:focus:not(:disabled) { --slot: var(--slot-user); }
+
+/* 通知与命令面板。未提供 level 时 notice 按 info 处理。 */
+#notice,
+#notice[data-level="info"] { --slot: var(--slot-user); }
+#notice[data-level="warn"] { --slot: var(--slot-warning); }
+#notice[data-level="error"] { --slot: var(--slot-error); }
+/* M-41：插件 notify 的通知行（level 三档，与 #notice/#questions-notice 用同一套语义 token）。 */
+#session-notice,
+#session-notice[data-level="info"] { --slot: var(--slot-user); }
+#session-notice[data-level="warning"] { --slot: var(--slot-warning); }
+#session-notice[data-level="error"] { --slot: var(--slot-error); }
+.command-palette-item { --slot: var(--slot-idle); }
+.command-palette-item.selected {
+  --slot: var(--accent);
+  box-shadow: none;
+}
+.command-palette-item.unavailable { --slot: var(--slot-dark); }
+.command-palette-item.unavailable[title*="TUI 专用"] { --slot: var(--slot-warning); }
+.command-palette-note,
+.mention-palette-note { --slot: var(--slot-dark); }
+.mention-palette-item { --slot: var(--slot-idle); }
+.mention-palette-item.selected { --slot: var(--accent); }
+
+/* 问题页（manager toolkit P1）：状态只由槽色表达，与既有语义同一份 token ——
+   未答 = 等待拍板（warning）；已答 = success；已关 = 最暗档（同归档行）。 */
+.question-item { --slot: var(--slot-warning); }
+.question-item[data-status="answered"] { --slot: var(--slot-success); }
+.question-item[data-status="closed"] { --slot: var(--slot-dark); }
+#view-tabs button { --slot: var(--slot-idle); }
+#view-tabs button[aria-selected="true"] { --slot: var(--slot-user); }
+#questions-filters button { --slot: var(--slot-idle); }
+#questions-filters button[aria-selected="true"] { --slot: var(--slot-user); }
+#questions-refresh { --slot: var(--slot-idle); }
+#questions-notice,
+#questions-notice[data-level="info"] { --slot: var(--slot-user); }
+#questions-notice[data-level="error"] { --slot: var(--slot-error); }
+/* 调试页（第四个页签）：机器事实按中性槽；「取不到的项」是警告语义（与问题未答同一档）。
+   与 `.question-item` 同一条原语（3px 槽 + 1px 其余边），不另造外观。 */
+.debug-item { --slot: var(--slot-idle); }
+.debug-item[data-state="unavailable"] { --slot: var(--slot-warning); }
+#debug-scope { --slot: var(--slot-idle); }
+#debug-refresh { --slot: var(--slot-idle); }
+#debug-notice,
+#debug-notice[data-level="info"] { --slot: var(--slot-user); }
+#debug-notice[data-level="error"] { --slot: var(--slot-error); }
+.question-answer-row button,
+.question-close-row button { --slot: var(--slot-idle); }
+.question-answer-row button[data-action="answer"],
+.question-close-row button[data-action="close-confirm"] { --slot: var(--slot-user); }
+.question-close-row button[data-action="close"],
+.question-close-row button[data-action="close-cancel"],
+.question-answer-row button[data-action="close"] { --slot: var(--slot-warning); }
+
+/* 其余独立信息行：次要事实保持中性；队列是等待态。 */
+#queue-status { --slot: var(--slot-warning); }
+/* 对话内的「推荐回复」：chip 是**模型说的一句话**（不是系统命令、也不是用户输入）⇒
+   用助手那一档槽色，与 user/工具的槽色都不同；一点就发出去（⌥1–⌥3）。 */
+.suggestion-chip { --slot: var(--slot-assistant); }
+#session-connection { --slot: var(--slot-error); }
+#session-connection.connected { --slot: var(--slot-success); }
+.device,
+.device-panel h2,
+#settings-panel,
+.attic-toggle,
+.attic-heading,
+.tree-connection,
+.tree-settings,
+#session-title,
+#session-cwd,
+#session-usage,
+#session-context,
+#export,
+.tree-nav h1,
+#new-session-toggle,
+.new-session-label { --slot: var(--slot-idle); }

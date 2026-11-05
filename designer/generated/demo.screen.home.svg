@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" data-doc-digest="sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8" data-designer-screen="home" data-designer-state="default" role="img" aria-label="会话 · default">
+<desc>designer 导出 · 屏 home · 状态 default · 文档摘要 sha256:71b596ddd7a2c474f6322aedf838a918b17c18bfd1bcafd6860b2e4cc27db3c8</desc>
+<rect data-el-id="home" data-el-type="container" x="0" y="0" width="400" height="300" fill="none"/>
+<text data-el-id="home-title" data-el-type="text" x="16" y="32" font-size="20" fill="#e6e6e6">会话</text>
+<rect data-el-id="home-card" data-el-type="rect" x="16" y="48" width="160" height="60" fill="#15171b" rx="8" stroke="#e6e6e6" stroke-width="1"/>
+<rect data-el-id="home-input" data-el-type="input" x="16" y="120" width="160" height="28" fill="none"/>
+<text data-el-id="home-input" data-el-type="input" x="16" y="134" font-size="14" fill="#e6e6e6">搜索</text>
+<rect data-el-id="home-button" data-el-type="button" x="188" y="120" width="80" height="28" fill="#3b82f6" rx="6"/>
+<text data-el-id="home-button" data-el-type="button" x="228" y="134" font-size="14" fill="#000000" text-anchor="middle">设置</text>
+</svg>
