@@ -1,0 +1,22 @@
+{
+  "name": "sopho-pi",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "个人助手：事项账本 + Web UI，pi 作为 agent 引擎",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "serve": "bash bin/serve.sh",
+    "stop": "bash bin/stop.sh",
+    "reload": "bash bin/reload-base.sh",
+    "restart": "bash bin/restart-base.sh",
+    "serve:win": "powershell -NoProfile -ExecutionPolicy Bypass -File bin/serve-win.ps1",
+    "stop:win": "powershell -NoProfile -ExecutionPolicy Bypass -File bin/stop-win.ps1",
+    "test:scroll": "node web/test-scroll.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.85.1"
+  }
+}

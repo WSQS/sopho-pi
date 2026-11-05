@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>sopho-pi v2</title>
+		<link rel="stylesheet" href="/app.css" />
+	</head>
+	<body>
+		<aside id="left">
+			<header>
+				<h1>会话</h1>
+				<button id="new">＋ 新会话</button>
+			</header>
+			<button id="unread" hidden></button>
+			<div id="tree"><p class="hint">读取中…</p></div>
+			<footer id="paths"></footer>
+			<button id="attic" hidden></button>
+			<div id="atticList" hidden></div>
+		</aside>
+
+		<main id="right">
+			<header id="head"><span class="hint">左边选一个会话</span></header>
+			<div id="messages" class="messages">
+				<div id="hist"></div>
+				<div id="liveBox"></div>
+				<button id="jump" title="回到底部">↓ 回到底部</button>
+			</div>
+			<footer id="composer">
+				<div id="cmds" hidden></div>
+				<div id="confirm" class="confirm" hidden></div>
+				<div id="notice" class="err" hidden></div>
+				<textarea id="input" rows="1" placeholder="选一个会话，然后说话…（/ 开命令面板）" disabled></textarea>
+				<div class="row">
+					<span id="hint" class="hint"></span>
+					<span id="ctx" class="ctx none" title="上下文用量"></span>
+					<button id="compact" class="tiny" hidden title="手动压缩上下文（= TUI 的 /compact）">压缩</button>
+					<button id="send" disabled>发送</button>
+				</div>
+			</footer>
+		</main>
+
+		<script type="module" src="/app.mjs"></script>
+	</body>
+</html>

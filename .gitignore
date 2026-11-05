@@ -1,0 +1,34 @@
+# 顶层白名单：只放行下面这些，其余一律拒绝。
+#
+# 为什么用 `/*` 而不是 `*`：
+#   `*` 会逐个匹配目录内部的每个文件，导致 `!bin/` 只放行了目录本身、
+#   里面的文件仍被忽略。`/*` 只锚定顶层，放行一个目录后其内容自然进来。
+#
+# 为什么不用黑名单：数据（含 auth.json / provider-keys.json / models.json 明文 key、
+#   sessions/、exports/）不在此仓库内，而是在 ~/.pi/profiles/assistant/。
+#   所以风险不来自目录布局，而来自意外 —— 测试时拷进来的 models.json、调试时导出的
+#   会话快照、备份文件、node_modules。黑名单靠“记得列全”，白名单靠“默认拒绝”。
+#
+# 副作用：新增顶层目录/文件必须显式加进来，否则 git 看不见。这是刻意的。
+
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/package.json
+!/package-lock.json
+!/bin/
+!/pi-extensions/
+!/server/
+!/web/
+
+# 递归排除：即使在放行的目录里也再挡一层（这些模式无前导斜杠，匹配任意层级，
+# 且写在放行规则之后，按“后匹配优先”生效）
+node_modules/
+__pycache__/
+*.pyc
+*.log
+.env
+.env.*
+.DS_Store
+*.tmp
