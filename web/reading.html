@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>阅读页 · sopho-pi</title>
+		<link rel="stylesheet" href="/app.css" />
+		<link rel="stylesheet" href="/reading.css" />
+	</head>
+	<body>
+		<aside id="left">
+			<header>
+				<h1>阅读页</h1>
+				<a class="mini" href="/" title="回到会话界面">会话</a>
+			</header>
+			<div id="rpPick">
+				<label for="rpList">现场</label>
+				<select id="rpList"></select>
+				<button id="rpReload" class="mini" title="重新从磁盘读这一页">重读</button>
+			</div>
+			<div id="rpMeta"></div>
+
+			<!-- debug 面板：**默认收起**（人类：\"可以加一个 debug 按钮，这个只能说有一个初版再看吧\"）。
+			     它替代了\"聊天面板\" —— 过程与机器事实从这里看，而不是再造一个对话。 -->
+			<details id="rpDebug">
+				<summary>调试</summary>
+				<div id="rpDebugBody"></div>
+			</details>
+		</aside>
+
+		<main id="reading">
+			<header id="head"><span class="hint">选一个页面</span></header>
+			<div id="rpBody" class="rp-body"></div>
+			<footer id="composer">
+				<div id="rpNotice" class="err" hidden></div>
+				<div class="row">
+					<span id="rpHint" class="hint"></span>
+					<button id="press" disabled title="把**所有**没发送的改动一次交出去（只有多块未发送时才可用；单块请用它自己那个按钮）">发送全部未发送的改动</button>
+				</div>
+			</footer>
+		</main>
+
+		<script type="module" src="/reading.mjs"></script>
+	</body>
+</html>

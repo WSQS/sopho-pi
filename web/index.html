@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>sopho-pi v2</title>
+		<link rel="stylesheet" href="/app.css" />
+	</head>
+	<body>
+		<aside id="left">
+			<header>
+				<h1>会话</h1>
+				<a class="mini" id="toreading" href="/reading.html" title="阅读页（一个现场一页）">阅读页</a>
+				<button id="new">＋ 新会话</button>
+			</header>
+			<div id="newbox" hidden>
+				<label class="newlabel" for="newcwd">新会话在哪个目录工作？</label>
+				<input id="newcwd" type="text" placeholder="留空 = 默认目录；可填绝对路径 / ~" autocomplete="off" />
+				<select id="newrecent" title="最近用过 / 绑定过的目录（与服务端的 /cwd-recents 同一份账）"></select>
+				<div class="newrow">
+					<button id="newgo">建这条会话</button>
+					<button id="newcancel" class="mini">取消</button>
+				</div>
+				<p class="newhint" id="newhint"></p>
+			</div>
+			<button id="unread" hidden></button>
+			<div id="tree"><p class="hint">读取中…</p></div>
+			<footer id="paths"></footer>
+			<button id="attic" hidden></button>
+			<div id="atticList" hidden></div>
+		</aside>
+
+		<main id="right">
+			<header id="head"><span class="hint">左边选一个会话</span></header>
+			<div id="messages" class="messages">
+				<div id="hist"></div>
+				<div id="liveBox"></div>
+				<button id="jump" title="回到底部">↓ 回到底部</button>
+			</div>
+			<footer id="composer">
+				<div id="cmds" hidden></div>
+				<div id="confirm" class="confirm" hidden></div>
+				<div id="notice" class="err" hidden></div>
+				<textarea id="input" rows="1" placeholder="选一个会话，然后说话…（/ 开命令面板）" disabled></textarea>
+				<div class="row">
+					<span id="hint" class="hint"></span>
+					<span id="ctx" class="ctx none" title="上下文用量"></span>
+					<button id="compact" class="tiny" hidden title="手动压缩上下文（= TUI 的 /compact）">压缩</button>
+					<button id="abort" class="tiny stop" hidden title="中断当前这一轮">■ 停止</button>
+					<button id="send" disabled>发送</button>
+				</div>
+			</footer>
+		</main>
+
+		<script type="module" src="/app.mjs"></script>
+	</body>
+</html>

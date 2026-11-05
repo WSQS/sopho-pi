@@ -1,0 +1,270 @@
+/* 阅读页（web/reading.html）。
+ *
+ * 刻意**只加**这一份：按钮/输入/配色全部沿用 web/app.css 里那套（`#send` 是按 id 写的，
+ * 所以那边把选择器扩成 `#send, #press` —— 不再是\"新设计\"）。这里只放这一页特有的几块：
+ * 原文段、问题、答案输入、读者笔记、助手块、字段、调试面板。
+ */
+
+/* ── 左栏：页面选择 + 页面元信息 + 调试 ── */
+/* ── 左栏**自己**在哪一层滚（别修好右边、左边又有东西被裁掉）──
+ * 这一列是 flex column（`#left` 在 app.css 里已经是），四段各有各的角色：
+ *   header  / #rpPick          —— 固定的短条（`flex: 0 0 auto`）
+ *   #rpMeta                    —— **可伸缩 + 自己滚**（长路径 / 错误行都在这里，它是唯一会长的那段）
+ *   #rpDebug                   —— 贴底、**封顶 45vh**，它自己的正文在里面滚
+ * 于是无论页面多长、右上角滚到哪，左栏四段总在视口内。 */
+#reading > #head,
+#reading > #composer,
+#left > header,
+#rpPick {
+	flex: 0 0 auto;
+}
+#rpPick {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--border);
+}
+#rpPick label {
+	color: var(--dim);
+	font-size: 11px;
+}
+#rpList {
+	flex: 1;
+	min-width: 0;
+	background: var(--bg-elev2);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 2px 4px;
+	font: inherit;
+	font-size: 11.5px;
+}
+#rpMeta {
+	padding: 8px 10px;
+	color: var(--dim);
+	font-size: 11px;
+	line-height: 1.7;
+	overflow-wrap: anywhere;
+	/* 唯一会长的那一段 ⇒ 让它**自己滚**（`min-height:0` 是 flex item 能缩到比内容矮的前提） */
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+}
+#rpMeta b {
+	color: var(--text);
+	font-weight: 500;
+}
+#rpDebug {
+	/* 贴左栏底（#left 是 flex column）：上面 `#rpMeta` 吃掉剩余空间，这一块自然落底 */
+	margin: 0 10px 10px;
+	border-top: 1px solid var(--border);
+	padding-top: 6px;
+	font-size: 11px;
+	color: var(--dim);
+	/* 摊开时也**不许把左栏撑爆**：封顶 45vh、`overflow:hidden` 兜底（下面正文自己滚） */
+	flex: 0 0 auto;
+	max-height: 45vh;
+	overflow: hidden;
+	/* ⚠️ 这里**不能**用 `display:flex`：`<details>` 的内容被包在一个匿名槽
+	 * （Chromium 是新出的 `::details-content`）里 —— 把 `<details>` 变成 flex 容器之后，
+	 * flex item 是「summary + 那个槽」，而槽本身没被约束 ⇒ 高度全给 summary（实测面板 h=25），
+	 * 正文溢出到面板外面去（实测正文 rect top=603 bottom=750，视口只有 613）。
+	 * 所以"面板封顶"与"正文自己滚"分成两条普通规则写：不需要懂那层槽。 */
+}
+#rpDebug summary {
+	cursor: pointer;
+	color: var(--dim);
+}
+#rpDebugBody {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	/* summary 约 25px；面板封顶 45vh ⇒ 正文自己封 38vh 并滚动（任何浏览器都成立的写法，
+	 * 不依赖 `::details-content`） */
+	max-height: 38vh;
+	overflow: auto;
+	padding: 4px 0;
+	line-height: 1.6;
+}
+#rpDebugBody .k {
+	color: var(--dim);
+}
+#rpDebugBody .v {
+	color: var(--text);
+}
+#rpPreview {
+	margin: 6px 0;
+}
+
+/* ── 右栏：这一页 ── */
+/* 右栏**唯一的滚动容器**：`flex:1` + `min-height:0` 才能比内容矮并自己滚；
+ * `min-width:0` + `overflow-wrap` 防一个超长不可断的 token 把整栏撑宽（横向滚也不该发生）。 */
+.rp-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	overflow: auto;
+	overflow-wrap: anywhere;
+	padding: 14px 20px 40px;
+}
+.rp-blk {
+	margin: 0 0 10px;
+}
+h2.rp-h,
+h3.rp-h,
+h4.rp-h,
+h5.rp-h {
+	margin: 22px 0 8px;
+	border-bottom: 1px solid var(--border);
+	padding-bottom: 4px;
+}
+h2.rp-h {
+	font-size: 15px;
+}
+h3.rp-h {
+	font-size: 13.5px;
+}
+h4.rp-h,
+h5.rp-h {
+	font-size: 12.5px;
+	color: var(--dim);
+}
+/* 原文：**只读**、比正文稍亮一点点，左边一条竖线标出\"这是书里的字\" */
+.rp-src {
+	border-left: 2px solid var(--border);
+	padding-left: 10px;
+	margin: 12px 0 6px;
+	color: var(--text);
+}
+.rp-srctag {
+	display: block;
+	color: var(--dim);
+	font-size: 10.5px;
+	margin-bottom: 2px;
+}
+/* 问题：段末那一句 */
+.rp-q {
+	color: var(--prompt);
+	margin: 10px 0 4px;
+}
+/* 答案：**可编辑**的输入区 */
+.rp-a {
+	display: block;
+	width: 100%;
+	min-height: 44px;
+	resize: vertical;
+	background: var(--bg-elev);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 6px 8px;
+	font: inherit;
+	margin: 0 0 8px;
+}
+.rp-a:focus,
+.rp-note:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+/* 读者段落（笔记）：同样是他的字，但样式比答案淡一点 */
+.rp-note {
+	display: block;
+	width: 100%;
+	min-height: 34px;
+	resize: vertical;
+	background: transparent;
+	color: var(--text);
+	border: 1px dashed var(--border);
+	border-radius: 4px;
+	padding: 6px 8px;
+	font: inherit;
+	margin: 0 0 10px;
+}
+/* 助手块：与 md 里那句 `style="color: #2563eb;"` 同一套观感 */
+.rp-asst {
+	border-left: 2px solid #2563eb;
+	padding-left: 10px;
+	color: #7aa2ff;
+	margin: 8px 0;
+}
+.rp-assttag {
+	display: block;
+	color: var(--dim);
+	font-size: 10.5px;
+}
+.rp-field {
+	color: var(--dim);
+	font-size: 11.5px;
+	margin: 8px 0 12px;
+	white-space: pre-wrap;
+}
+.rp-fieldtag {
+	color: var(--dim);
+	font-size: 10.5px;
+}
+.rp-cmt {
+	color: var(--dim);
+	font-size: 11px;
+	margin: 6px 0;
+}
+.rp-cmt summary {
+	cursor: pointer;
+}
+.rp-hr {
+	border: 0;
+	border-top: 1px solid var(--border);
+	margin: 14px 0;
+}
+.rp-blocked {
+	border-color: var(--err) !important;
+}
+
+/* ── 草稿：
+ * 这一块里的字**不是文件里的内容**，是上次没发送的草稿（刷新 / 切页之后恢复回来的）。
+ * 判据：`web/reading.mjs` 把这一块包上 `.rp-draft` 并亮出 `.rp-drafttag`；
+ * 只加"看得见的标记"，**不碰布局尺寸**（那一堆按块发送的断言是按现在的度量钉的）。 */
+.rp-drafttag {
+	color: var(--prompt);
+	font-size: 10.5px;
+	margin-right: 8px;
+}
+/* `hidden` 属性要被尊重（`display:block` 那条规则会把它盖掉） */
+.rp-drafttag[hidden] {
+	display: none;
+}
+.rp-draft textarea {
+	border-color: var(--prompt);
+}
+
+/* 认不回原位的草稿（页尾那一块）：只给提示文字上色，不改行局（textarea 用 .rp-note 那套） */
+.rp-orphanhead {
+	color: var(--prompt);
+	font-size: 11px;
+	line-height: 1.6;
+	margin: 14px 0 6px;
+}
+.rp-orphanrow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 6px 0 2px;
+}
+.rp-orphantag {
+	color: var(--dim);
+	font-size: 10.5px;
+}
+.rp-dismiss {
+	font-size: 10.5px;
+}
+
+/* 底部一行：状态 + 发送（发送的样式来自 app.css 的 `#send, #press`） */
+#rpHint {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+#rpNotice[hidden] {
+	display: none;
+}
