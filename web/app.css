@@ -1,0 +1,402 @@
+:root {
+	--bg: #0f0f13;
+	--bg-elev: #17171e;
+	--bg-elev2: #1e1e27;
+	--border: #2a2a35;
+	--text: #e6e6ea;
+	--dim: #8b8b9a;
+	--wait: #e5c07b;
+	--moving: #62c7d6;
+	--error: #e06c75;
+	--you: #98c379;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	height: 100vh;
+	display: flex;
+	background: var(--bg);
+	color: var(--text);
+	font: 13px/1.6 ui-sans-serif, system-ui, "Noto Sans CJK SC", sans-serif;
+}
+
+.hint {
+	color: var(--dim);
+}
+
+/* ── 左栏 ── */
+#left {
+	width: 340px;
+	min-width: 340px;
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--border);
+	background: var(--bg-elev);
+}
+#left > header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--border);
+}
+#left h1 {
+	font-size: 13px;
+	margin: 0;
+	letter-spacing: 0.08em;
+}
+#left > header .actions {
+	display: flex;
+	gap: 6px;
+}
+.actions button {
+	background: var(--bg-elev2);
+	color: var(--dim);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 3px 9px;
+	cursor: pointer;
+	font: inherit;
+}
+.actions button:hover {
+	color: var(--text);
+}
+
+.tree {
+	flex: 1;
+	overflow-y: auto;
+	padding: 6px 0 12px;
+}
+
+.group > h2 {
+	margin: 10px 0 4px;
+	padding: 0 12px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	color: var(--dim);
+	text-transform: uppercase;
+}
+.group.wait > h2 {
+	color: var(--wait);
+}
+.group.moving > h2 {
+	color: var(--moving);
+}
+
+.item {
+	padding: 7px 12px 9px;
+	border-left: 2px solid transparent;
+	cursor: default;
+}
+.item.tone-wait {
+	border-left-color: var(--wait);
+}
+.item.tone-moving {
+	border-left-color: var(--moving);
+}
+.item.tone-error {
+	border-left-color: var(--error);
+}
+.item + .item {
+	border-top: 1px solid #1c1c24;
+}
+
+.item .head {
+	display: flex;
+	gap: 6px;
+	align-items: baseline;
+}
+.item .id {
+	color: var(--dim);
+	font-variant-numeric: tabular-nums;
+}
+.item .tag {
+	font-size: 11px;
+	white-space: nowrap;
+}
+.item.tone-wait .tag {
+	color: var(--wait);
+}
+.item.tone-moving .tag {
+	color: var(--moving);
+}
+.item.tone-error .tag {
+	color: var(--error);
+}
+.item .age {
+	margin-left: auto;
+	font-size: 11px;
+	color: var(--dim);
+	font-variant-numeric: tabular-nums;
+}
+.item .age.stale {
+	color: var(--wait);
+}
+.item .text {
+	margin-top: 2px;
+}
+.item .meta {
+	margin-top: 3px;
+	font-size: 11.5px;
+	color: var(--dim);
+}
+.item .meta.next::before {
+	content: "└ ";
+}
+
+/* 已结束的子项收成的一行摘要 —— 比普通 meta 更淡，表示“这里收起来了” */
+.item .meta.pruned {
+	opacity: 0.7;
+}
+
+.sess {
+	margin: 3px 0 0 10px;
+	padding: 3px 6px;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 11.5px;
+	color: var(--dim);
+	display: flex;
+	gap: 6px;
+}
+.sess:hover {
+	background: var(--bg-elev2);
+	color: var(--text);
+}
+.sess.active {
+	background: var(--bg-elev2);
+	color: var(--text);
+}
+.sess .kind {
+	color: var(--moving);
+}
+.sess .bad {
+	color: var(--error);
+}
+
+/* 正在跑的会话：脉冲小点 */
+.sess .live {
+	color: var(--moving);
+	animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+	50% {
+		opacity: 0.3;
+	}
+}
+
+/* 根会话派生的子会话：再缩一级，表示从属关系 */
+.children {
+	margin-left: 12px;
+	border-left: 1px solid var(--border);
+}
+/* 事项树的子层：比根会话紧一点，因为每个子项本身就是一张卡 */
+.item > .children {
+	margin: 3px 0 0 10px;
+	padding-left: 8px;
+}
+.children .item {
+	padding: 4px 0 5px;
+}
+/* ▸ = 父节点指的"下一个该动的子项" */
+.item .head .mark {
+	color: var(--moving);
+	font-weight: 700;
+}
+.group.hub > h2 {
+	color: var(--dim);
+}
+
+#paths {
+	padding: 6px 12px;
+	border-top: 1px solid var(--border);
+	font-size: 10.5px;
+	color: var(--dim);
+	word-break: break-all;
+}
+#paths .live {
+	color: var(--moving);
+}
+#paths .bad {
+	color: var(--error);
+}
+
+/* ── 右栏 ── */
+#right {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+#right-head {
+	padding: 10px 16px;
+	border-bottom: 1px solid var(--border);
+	background: var(--bg-elev);
+	display: flex;
+	gap: 12px;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+#right-head .title {
+	font-weight: 600;
+}
+#right-head .sub {
+	color: var(--dim);
+	font-size: 11.5px;
+}
+#right-head .file {
+	font-family: ui-monospace, monospace;
+	font-size: 10.5px;
+	color: var(--dim);
+}
+
+.messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 14px 18px 40px;
+}
+.msg {
+	max-width: 780px;
+	margin: 0 0 14px;
+	padding-left: 10px;
+	border-left: 2px solid var(--border);
+}
+.msg.user {
+	border-left-color: var(--you);
+}
+.msg .who {
+	font-size: 11px;
+	color: var(--dim);
+	margin-bottom: 2px;
+}
+.msg.user .who {
+	color: var(--you);
+}
+.msg .body {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+.msg .tools {
+	margin-top: 3px;
+	font-size: 11px;
+	color: var(--dim);
+}
+
+.empty {
+	color: var(--dim);
+	padding: 20px;
+}
+
+/* ── 输入区 ── */
+#composer {
+	border-top: 1px solid var(--border);
+	background: var(--bg-elev);
+	padding: 10px 16px 12px;
+}
+#composer textarea {
+	width: 100%;
+	resize: none;
+	background: var(--bg-elev2);
+	color: inherit;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 8px 10px;
+	font: inherit;
+	line-height: 1.5;
+}
+#composer textarea:focus {
+	outline: none;
+	border-color: var(--moving);
+}
+#composer textarea:disabled {
+	opacity: 0.5;
+}
+#composer .row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	margin-top: 6px;
+}
+#composer .hint {
+	font-size: 11px;
+}
+#send {
+	background: var(--bg-elev2);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 4px 14px;
+	cursor: pointer;
+	font: inherit;
+}
+#send:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+/* ── 流式中的实时气泡 ── */
+.msg.live {
+	border-left-color: var(--moving);
+}
+.msg .tool {
+	font-family: ui-monospace, monospace;
+	font-size: 11.5px;
+	color: var(--dim);
+}
+.msg .tool.bad {
+	color: var(--error);
+}
+#right-head .running {
+	color: var(--moving);
+}
+
+/* 消息区在输入框存在时不再需要额外底距 */
+.messages {
+	padding-bottom: 16px;
+}
+
+/* ── #22 自动续跑 ──
+   可见标记：会话行上的「⟳自动 N」、事项上的「⟳auto」与链条状态行。
+   在跑用 --moving（在动）；刹车 / 急停 / 出错改用 --wait / --error，一眼看出“停了”。 */
+.sess .auto {
+	color: var(--moving);
+}
+.item .meta.next .spin,
+.item .meta.chain .spin {
+	color: var(--moving);
+}
+.item .meta.chain {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.item .meta.chain-waiting-upstream .spin,
+.item .meta.chain-stopped .spin {
+	color: var(--wait);
+}
+.item .meta.chain-error .spin {
+	color: var(--error);
+}
+.item .meta.chain .stop {
+	background: transparent;
+	color: var(--dim);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	padding: 0 6px;
+	font: inherit;
+	font-size: 10.5px;
+	cursor: pointer;
+}
+.item .meta.chain .stop:hover {
+	color: var(--error);
+	border-color: var(--error);
+}
+#right-head .sub.auto {
+	color: var(--moving);
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>sopho-pi</title>
+		<link rel="stylesheet" href="/app.css" />
+	</head>
+	<body>
+		<aside id="left">
+			<header>
+				<h1>事项</h1>
+				<div class="actions">
+					<button id="refresh" title="重新读取账本">刷新</button>
+				</div>
+			</header>
+			<div id="tree" class="tree"><p class="hint">读取中…</p></div>
+			<footer id="paths"></footer>
+		</aside>
+
+		<main id="right">
+			<header id="right-head"><span class="hint">左边选一个会话</span></header>
+			<div id="messages" class="messages"></div>
+			<footer id="composer">
+				<textarea id="input" rows="1" placeholder="选一个会话，然后在这里说话…" disabled></textarea>
+				<div class="row">
+					<span id="composer-hint" class="hint"></span>
+					<button id="send" disabled>发送</button>
+				</div>
+			</footer>
+		</main>
+
+		<script type="module" src="/app.mjs"></script>
+	</body>
+</html>

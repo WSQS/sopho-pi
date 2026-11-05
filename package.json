@@ -1,0 +1,25 @@
+{
+  "name": "sopho-pi",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "个人助手：事项账本 + Web UI，pi 作为 agent 引擎",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "a": "node bin/ledger.mjs",
+    "retro": "node bin/retro.mjs",
+    "start": "node server/index.mjs",
+    "stop": "node server/stop.mjs",
+    "spike": "node server/spike-runtimes.mjs",
+    "test:optimistic": "node web/test-optimistic.mjs",
+    "test:auto": "node server/test-auto-continue.mjs",
+    "test:triage": "node bin/test-triage-parse.mjs",
+    "lan": "SOPHO_HOST=0.0.0.0 node server/index.mjs",
+    "reboot": "bash bin/reboot.sh"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.85.1"
+  }
+}
